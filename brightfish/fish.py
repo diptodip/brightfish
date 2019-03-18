@@ -1,7 +1,8 @@
 import torch
 
 class Fish:
-    def __init__(set_point=0.5, learning_rate=1e-2):
+    def __init__(position, set_point=0.5, learning_rate=1e-2):
+        self.position = position
         self.set_point = set_point
         self.learning_rate = learning_rate
         self.p_right = 0.5
@@ -14,13 +15,13 @@ class Fish:
         raise NotImplementedError
 
 class BinocularFish(Fish):
-    def __init__(set_point=0.5, learning_rate=1e-2):
-        super(BinocularFish, self).__init__(set_point)
+    def __init__(position, set_point=0.5, learning_rate=1e-2):
+        super(BinocularFish, self).__init__(position, set_point, learning_rate)
 
     def step(self, environment):
         # calculate differences from both eyes
-        brightness_left = environment.left_eye().mean()
-        brightness_right = environment.right_eye().mean()
+        brightness_left = environment.left_eye(self.position).mean()
+        brightness_right = environment.right_eye(self.position).mean()
 
         # update set point to be closer to mean of two eyes
         update = self.set_point - np.mean([brightness_left, brightness_right])
