@@ -11,6 +11,28 @@ class Environment:
     def run(self, timesteps):
         raise NotImplementedError
 
+    def midpoint(self):
+        if isinstance(self.shape, tuple):
+            return tuple(s//2 for s in self.shape)
+        else:
+            return self.shape//2
+
+    def left_eye(self, position):
+        if isinstance(self.shape, tuple):
+            start = np.unravel_index(0, self.shape)
+            return self.stage[[slice(start[i], position[i])
+                               for i in range(len(self.shape))]]
+        else:
+            return self.stage[0:position]
+ 
+    def right_eye(self, position):
+        if isinstance(self.shape, tuple):
+            stop = np.unravel_index(-1, self.shape)
+            return self.stage[[slice(position[i], stop[i])
+                               for i in range(len(self.shape))]]
+        else:
+            return self.stage[position:-1]
+
 class SinusoidalLine(Environment):
     def __init__(self, shape,
                        start = -np.pi,
