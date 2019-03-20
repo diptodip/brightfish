@@ -49,7 +49,7 @@ class BinocularFish(Fish):
     def run(self, environment, timesteps):
         params = [[self.set_point, self.p_left, self.p_right]]
         for i in range(timesteps):
-            params.append(self.step(env_steps[i]))
+            params.append(self.step(environment))
         params = np.stack(params)
         return params
 
