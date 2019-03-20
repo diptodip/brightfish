@@ -33,6 +33,24 @@ class SinusoidalLine(Environment):
         self.phase = 0
 
     def step(self):
-        self.phase += 1
-        return np.roll(self.stage, self.phase-1)
+        if not self.static:
+            self.phase = (self.phase + self.dt) % (2 * np.pi)
+            line = 0.5 * (1 + np.sin(np.linspace(self.start,
+                                          self.stop,
+                                          num=self.shape)
+                                     + self.phase))
+            self.stage = line
+    
+    def left_eye(self, heading):
+        heading = heading % (2 * np.pi)
+        step_size = (2 * np.pi) / self.shape
+        index = int(np.clip(heading / step_size, 0, self.shape))
+        return self.stage.take(list(range(index, index+(self.shape // 4))),
+                               mode='wrap')
 
+    def right_eye(self, heading):
+        heading = heading % (2 * np.pi)
+        step_size = (2 * np.pi) / self.shape
+        index = int(np.clip(heading / step_size, 0, self.shape))
+        return self.stage.take(list(range(index-(self.shape // 4), index)),
+                               mode='wrap')
