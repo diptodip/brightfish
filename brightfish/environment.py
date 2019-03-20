@@ -8,9 +8,6 @@ class Environment:
     def step(self):
         raise NotImplementedError
 
-    def run(self, timesteps):
-        raise NotImplementedError
-
     def midpoint(self):
         if isinstance(self.shape, tuple):
             return tuple(s//2 for s in self.shape)
@@ -49,10 +46,3 @@ class SinusoidalLine(Environment):
         self.phase += 1
         return np.roll(self.stage, self.phase-1)
 
-    def run(self, timesteps):
-        lines = []
-        for i in range(timesteps):
-            line = self.step()
-            lines.append(line)
-        lines = np.stack(lines)
-        return lines
