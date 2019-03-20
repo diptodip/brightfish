@@ -15,13 +15,13 @@ class Fish:
         raise NotImplementedError
 
 class BinocularFish(Fish):
-    def __init__(position, set_point=0.5, learning_rate=1e-2):
-        super(BinocularFish, self).__init__(position, set_point, learning_rate)
+    def __init__(self, heading, set_point=0.5, learning_rate=5e-2):
+        super(BinocularFish, self).__init__(heading, set_point, learning_rate)
 
     def step(self, environment):
         # calculate differences from both eyes
-        brightness_left = environment.left_eye(self.position).mean()
-        brightness_right = environment.right_eye(self.position).mean()
+        brightness_left = environment.left_eye(self.heading).mean()
+        brightness_right = environment.right_eye(self.heading).mean()
 
         # update set point to be closer to mean of two eyes
         update = self.set_point - np.mean([brightness_left, brightness_right])
