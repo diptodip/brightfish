@@ -1,12 +1,44 @@
 import numpy as np
 
 class Fish:
-    def __init__(self, heading, set_point=0.5, learning_rate=1e-2):
+    def __init__(self,
+                 heading,
+                 set_point=0.5,
+                 learning_rate=1e-2,
+                 turning_rate=1e-2):
         self.heading = heading
         self.set_point = set_point
         self.learning_rate = learning_rate
+        self.turning_rate = turning_rate
         self.p_right = 0.5
         self.p_left = 0.5
+
+    def __str__(self):
+        message = ("{0}: heading: {1:.2f} set_point: {2:.2f} "
+                   + "p_left: {3:.2f} p_right: {4:.2f}")
+        return message.format(self.__class__.__name__,
+                              self.heading,
+                              self.set_point,
+                              self.p_left,
+                              self.p_right)
+    
+    def __repr__(self):
+        message = ("{0}: heading: {1:.2f} set_point: {2:.2f} "
+                   + "p_left: {3:.2f} p_right: {4:.2f}")
+        return message.format(self.__class__.__name__,
+                              self.heading,
+                              self.set_point,
+                              self.p_left,
+                              self.p_right)
+
+    def turn(self):
+        # 1 if turning left
+        turn_direction = np.random.binomial(1, self.p_left)
+        # -1 if turning right
+        if turn_direction == 0:
+            turn_direction = -1
+        self.heading += turn_direction * self.turning_rate
+        self.heading = self.heading % (2 * np.pi)
 
     def step(self, environment):
         raise NotImplementedError
@@ -40,14 +72,17 @@ class BinocularFish(Fish):
         self.p_right = np.clip(self.p_right, 0.0, 1.0)
         self.p_left = np.clip(self.p_left, 0.0, 1.0)
 
+        # turn fish
+        self.turn()
+
         # step environment
         environment.step()
 
         # return updated parameters
-        return [self.set_point, self.p_left, self.p_right]
+        return [self.heading, self.set_point, self.p_left, self.p_right]
 
     def run(self, environment, timesteps):
-        params = [[self.set_point, self.p_left, self.p_right]]
+        params = [[self.heading, self.set_point, self.p_left, self.p_right]]
         for i in range(timesteps):
             params.append(self.step(environment))
         params = np.stack(params)
