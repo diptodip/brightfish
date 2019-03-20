@@ -14,21 +14,11 @@ class Environment:
         else:
             return self.shape//2
 
-    def left_eye(self, position):
-        if isinstance(self.shape, tuple):
-            start = np.unravel_index(0, self.shape)
-            return self.stage[[slice(start[i], position[i])
-                               for i in range(len(self.shape))]]
-        else:
-            return self.stage[0:position]
+    def left_eye(self, heading):
+        raise NotImplementedError
  
-    def right_eye(self, position):
-        if isinstance(self.shape, tuple):
-            stop = np.unravel_index(-1, self.shape)
-            return self.stage[[slice(position[i], stop[i])
-                               for i in range(len(self.shape))]]
-        else:
-            return self.stage[position:-1]
+    def right_eye(self, heading):
+        raise NotImplementedError
 
 class SinusoidalLine(Environment):
     def __init__(self, shape,
