@@ -4,7 +4,7 @@ class Fish:
     def __init__(self,
                  heading,
                  set_point=0.5,
-                 learning_rate=1e-2,
+                 learning_rate=5e-2,
                  turning_rate=1e-2):
         self.heading = heading
         self.set_point = set_point
