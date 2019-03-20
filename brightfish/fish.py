@@ -25,7 +25,7 @@ class BinocularFish(Fish):
 
         # update set point to be closer to mean of two eyes
         update = self.set_point - np.mean([brightness_left, brightness_right])
-        self.set_point -= learning_rate * update
+        self.set_point -= self.learning_rate * update
 
         # update turn probabilities to turn towards area closer to set point
         diff_left = np.abs(brightness_left - self.set_point)
