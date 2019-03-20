@@ -1,8 +1,8 @@
-import torch
+import numpy as np
 
 class Fish:
-    def __init__(position, set_point=0.5, learning_rate=1e-2):
-        self.position = position
+    def __init__(self, heading, set_point=0.5, learning_rate=1e-2):
+        self.heading = heading
         self.set_point = set_point
         self.learning_rate = learning_rate
         self.p_right = 0.5
