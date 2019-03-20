@@ -44,11 +44,10 @@ class BinocularFish(Fish):
         environment.step()
 
         # return updated parameters
-        return [self.set_point, self.p_right, self.p_left]
+        return [self.set_point, self.p_left, self.p_right]
 
     def run(self, environment, timesteps):
-        env_steps = environment.run(timesteps)
-        params = [[self.set_point, self.p_right, self.p_left]]
+        params = [[self.set_point, self.p_left, self.p_right]]
         for i in range(timesteps):
             params.append(self.step(env_steps[i]))
         params = np.stack(params)
