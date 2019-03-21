@@ -102,10 +102,58 @@ class Fish:
         raise NotImplementedError
 
 class BinocularFish(Fish):
+    """
+    Model zebrafish that integrates binocular information to update a set point
+    of preferred brightness.
+
+    Args:
+	heading (float): Defines the heading in radians of the fish.
+
+	set_point (float): Defines the set point of the fish, i.e. the intensity
+	that the fish should seek to turn towards.
+
+	learning_rate (float): Defines how fast the fish updates its set point
+	and turning probabilities.
+
+	turning_rate (float): Defines how fast the fish turns in a given time
+	step.
+
+    Attributes:
+	heading (float): Defines the heading in radians of the fish.
+
+	set_point (float): Defines the set point of the fish, i.e. the intensity
+	that the fish should seek to turn towards.
+
+	learning_rate(float): Defines how fast the fish updates its set point
+	and turning probabilities.
+
+	turning_rate(float): Defines how fast the fish turns in a given time
+	step.
+
+	p_right (float): Defines the probability of turning clockwise. Should be
+	clamped to $[0, 1]$.
+
+	p_left (float): Defines the probability of turning counterclockwise.
+	Should be clamped to $[0, 1]$.
+    """
     def __init__(self, heading, set_point=0.5, learning_rate=5e-2):
         super(BinocularFish, self).__init__(heading, set_point, learning_rate)
 
     def step(self, environment):
+        """
+	Defines the behavior of the fish in one time step in the given
+	environment. This fish takes the average of brightness information from
+	both eyes and updates its set point to be closer to this average. This
+	fish also updates its turning probabilities to increase probability to
+	turn towards the eye with brightness closer to the updated set point.
+
+	Args:
+	    environment (``Environment``): Defines the environment in which the
+	    fish takes a step.
+
+	Returns:
+	    A list of the parameters defining the status of the fish.
+        """
         # calculate differences from both eyes
         brightness_left = environment.left_eye(self.heading).mean()
         brightness_right = environment.right_eye(self.heading).mean()
@@ -137,6 +185,19 @@ class BinocularFish(Fish):
         return [self.heading, self.set_point, self.p_left, self.p_right]
 
     def run(self, environment, timesteps):
+        """
+	Defines the behavior of the fish over multiple time steps.
+
+	Args:
+	    environment (``Environment``): Defines the environment in which the
+	    fish takes a step.
+
+	    timesteps (int): Defines the number of time steps to perform.
+
+	Returns:
+	    An ``np.ndarray`` of the parameters defining the status of the fish
+	    at each time point.
+        """
         params = [[self.heading, self.set_point, self.p_left, self.p_right]]
         for i in range(timesteps):
             params.append(self.step(environment))
