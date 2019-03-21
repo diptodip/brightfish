@@ -109,13 +109,13 @@ class BinocularFish(Fish):
     Args:
 	heading (float): Defines the heading in radians of the fish.
 
-	set_point (float): Defines the set point of the fish, i.e. the intensity
+	set_point (float, optional): Defines the set point of the fish, i.e. the intensity
 	that the fish should seek to turn towards.
 
-	learning_rate (float): Defines how fast the fish updates its set point
+	learning_rate (float, optional): Defines how fast the fish updates its set point
 	and turning probabilities.
 
-	turning_rate (float): Defines how fast the fish turns in a given time
+	turning_rate (float, optional): Defines how fast the fish turns in a given time
 	step.
 
     Attributes:
