@@ -244,6 +244,28 @@ class MonocularFish(Fish):
     """
     def __init__(self, heading, set_point=[0.5, 0.5], learning_rate=5e-2):
         super(BinocularFish, self).__init__(heading, set_point, learning_rate)
+    
+    def __str__(self):
+        message = ("{0}: heading: {1:.2f} set_point_left: {2:.2f} "
+                   + "set_point_right: {2:.2f} "
+                   + "p_left: {3:.2f} p_right: {4:.2f}")
+        return message.format(self.__class__.__name__,
+                              self.heading,
+                              self.set_point[0],
+                              self.set_point[1],
+                              self.p_left,
+                              self.p_right)
+    
+    def __repr__(self):
+        message = ("{0}: heading: {1:.2f} set_point_left: {2:.2f} "
+                   + "set_point_right: {2:.2f} "
+                   + "p_left: {3:.2f} p_right: {4:.2f}")
+        return message.format(self.__class__.__name__,
+                              self.heading,
+                              self.set_point[0],
+                              self.set_point[1],
+                              self.p_left,
+                              self.p_right)
 
     def step(self, environment):
         """
@@ -290,7 +312,11 @@ class MonocularFish(Fish):
         environment.step()
 
         # return updated parameters
-        return [self.heading, self.set_point, self.p_left, self.p_right]
+        return [self.heading,
+                self.set_point[0],
+                self.set_point[1],
+                self.p_left,
+                self.p_right]
 
     def run(self, environment, timesteps):
         """
@@ -306,7 +332,11 @@ class MonocularFish(Fish):
 	    An ``np.ndarray`` of the parameters defining the status of the fish
 	    at each time point.
         """
-        params = [[self.heading, self.set_point, self.p_left, self.p_right]]
+        params = [[self.heading,
+                   self.set_point[0],
+                   self.set_point[1],
+                   self.p_left,
+                   self.p_right]]
         for i in range(timesteps):
             params.append(self.step(environment))
         params = np.stack(params)
