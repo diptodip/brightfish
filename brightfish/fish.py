@@ -1,6 +1,42 @@
 import numpy as np
 
 class Fish:
+    """
+    Base class for defining a simulated zebrafish that respond to brightness. A
+    base fish takes at least a heading to define its starting orientation.
+    Subclasses of fish should implement methods for what happens in a given time
+    step and running for multiple time steps.
+
+    Args:
+	heading (float): Defines the heading in radians of the fish.
+
+	set_point (float): Defines the set point of the fish, i.e. the intensity
+	that the fish should seek to turn towards.
+
+	learning_rate (float): Defines how fast the fish updates its set point
+	and turning probabilities.
+
+	turning_rate (float): Defines how fast the fish turns in a given time
+	step.
+
+    Attributes:
+	heading (float): Defines the heading in radians of the fish.
+
+	set_point (float): Defines the set point of the fish, i.e. the intensity
+	that the fish should seek to turn towards.
+
+	learning_rate(float): Defines how fast the fish updates its set point
+	and turning probabilities.
+
+	turning_rate(float): Defines how fast the fish turns in a given time
+	step.
+
+	p_right (float): Defines the probability of turning clockwise. Should be
+	clamped to $[0, 1]$.
+
+	p_left (float): Defines the probability of turning counterclockwise.
+	Should be clamped to $[0, 1]$.
+    """
     def __init__(self,
                  heading,
                  set_point=0.5,
@@ -32,18 +68,37 @@ class Fish:
                               self.p_right)
 
     def turn(self):
-        # 1 if turning left
+        """
+	Updates ``self.heading`` by ``self.turning_rate`` radians in a random
+	direction determined by the turning probabilities.
+        """
+        # 1 if turning counterclockwise
         turn_direction = np.random.binomial(1, self.p_left)
-        # -1 if turning right
+        # -1 if turning clockwise
         if turn_direction == 0:
             turn_direction = -1
         self.heading += turn_direction * self.turning_rate
         self.heading = self.heading % (2 * np.pi)
 
     def step(self, environment):
+        """
+	Defines the behavior of the fish in one time step in the given
+	environment.
+
+	Args:
+	    environment (``Environment``): Defines the environment in which the
+	    fish takes a step.
+        """
         raise NotImplementedError
 
     def run(self, environment, timesteps):
+        """
+        Defines the behavior of the fish over multiple time steps.
+	
+        Args:
+	    environment (``Environment``): Defines the environment in which the
+	    fish takes a step.
+        """
         raise NotImplementedError
 
 class BinocularFish(Fish):
