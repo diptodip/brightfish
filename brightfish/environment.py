@@ -54,6 +54,40 @@ class Environment:
         raise NotImplementedError
 
 class SinusoidalCircle(Environment):
+    """
+    Simple environment consisting of a circular sine wave. The sine wave peaks
+    at a heading of $\pi$ radians and is squished to the range [0, 1].
+
+    Args:
+	shape (int): Integer defining the number of values of sine included in
+	``self.stage``.
+
+	dt (float, optional): Float that designates how much the peak moves
+	counterclockwise in one time step if ``self.static`` is ``False``.
+
+	static (bool, optional): Boolean variable that determines whether peak
+	is stationary at each time step or moves autonomously at each time step.
+
+    Attributes:
+	shape (int): Integer defining the number of values of sine included in
+	``self.stage``.
+
+	start (float): Contains the start heading for a circle, $0$.
+
+	stop (float): Contains the end heading for a circle, $2\pi$.
+
+	phase (float): Defines the phase of the sine function in radians.
+	Initialized to $\frac{3\pi}{2}$.
+
+	dt (float, optional): Float that designates how much the peak moves
+	counterclockwise in one time step if ``self.static`` is ``False``.
+
+	stage (None or ndarray): Flat ``np.ndarray`` that contains
+	``self.shape`` values of sine from $0$ to $2\pi$.
+
+	static (bool, optional): Boolean variable that determines whether peak
+	is stationary at each time step or moves autonomously at each time step.
+    """
     def __init__(self,
                  shape,
                  dt = 1e-2,
@@ -70,6 +104,10 @@ class SinusoidalCircle(Environment):
         self.static = static
 
     def step(self):
+        """
+	If ``self.static`` is ``False``, move peak counterclockwise by
+	``self.dt``.
+        """
         if not self.static:
             self.phase = (self.phase + self.dt) % (2 * np.pi)
             line = 0.5 * (1 + np.sin(np.linspace(self.start,
@@ -79,6 +117,17 @@ class SinusoidalCircle(Environment):
             self.stage = line
     
     def left_eye(self, heading):
+        """
+	Returns the information observed by the left eye.
+
+	Args:
+	    heading (float): Gives the heading in radians from which to gather
+	    left eye information.
+
+        Returns:
+	    An ``np.ndarray`` containing values from ``self.stage`` that are $\frac{\pi}{2}$ radians
+	    counterclockwise to ``heading``.
+        """
         heading = heading % (2 * np.pi)
         step_size = (2 * np.pi) / self.shape
         index = int(np.clip(heading / step_size, 0, self.shape))
@@ -86,6 +135,17 @@ class SinusoidalCircle(Environment):
                                mode='wrap')
 
     def right_eye(self, heading):
+	"""
+	Returns the information observed by the right eye.
+
+	Args:
+	    heading (float): Gives the heading in radians from which to gather
+	    right eye information.
+
+	Returns:
+	    An ``np.ndarray`` containing values from ``self.stage`` that are
+	    $\frac{\pi}{2}$ radians clockwise to ``heading``.
+	"""
         heading = heading % (2 * np.pi)
         step_size = (2 * np.pi) / self.shape
         index = int(np.clip(heading / step_size, 0, self.shape))
