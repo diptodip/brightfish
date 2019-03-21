@@ -243,7 +243,7 @@ class MonocularFish(Fish):
 	Should be clamped to $[0, 1]$.
     """
     def __init__(self, heading, set_point=[0.5, 0.5], learning_rate=5e-2):
-        super(BinocularFish, self).__init__(heading, set_point, learning_rate)
+        super(MonocularFish, self).__init__(heading, set_point, learning_rate)
     
     def __str__(self):
         message = ("{0}: heading: {1:.2f} set_point_left: {2:.2f} "
