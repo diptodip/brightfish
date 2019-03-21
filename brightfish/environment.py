@@ -93,7 +93,7 @@ class SinusoidalCircle(Environment):
                  dt = 1e-2,
                  static=True):
         super(SinusoidalCircle, self).__init__(shape)
-        self.start = 0
+        self.start = 0.0
         self.stop = 2 * np.pi
         self.phase = 3 * np.pi / 2
         self.dt = dt
