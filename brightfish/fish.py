@@ -205,3 +205,110 @@ class BinocularFish(Fish):
         params = np.stack(params)
         return params
 
+class MonocularFish(Fish):
+    """
+    Model zebrafish that integrates monocular information to update two set
+    points of preferred brightness (one for each eye).
+
+    Args:
+	heading (float): Defines the heading in radians of the fish.
+
+	set_point (list of floats, optional): Defines the set points of the
+	fish, i.e. the intensities that the fish should seek to turn towards
+	given information from each eye, respectively.
+
+	learning_rate (float, optional): Defines how fast the fish updates its
+	set points and turning probabilities.
+
+	turning_rate (float, optional): Defines how fast the fish turns in a
+	given time step.
+
+    Attributes:
+	heading (float): Defines the heading in radians of the fish.
+
+	set_point (list of floats): Defines the set points of the fish, i.e. the
+	intensities that the fish should seek to turn towards given information
+	from each eye, respectively.
+
+	learning_rate (float): Defines how fast the fish updates its set points
+	and turning probabilities.
+
+	turning_rate (float): Defines how fast the fish turns in a given time
+	step.
+
+	p_right (float): Defines the probability of turning clockwise. Should be
+	clamped to $[0, 1]$.
+
+	p_left (float): Defines the probability of turning counterclockwise.
+	Should be clamped to $[0, 1]$.
+    """
+    def __init__(self, heading, set_point=[0.5, 0.5], learning_rate=5e-2):
+        super(BinocularFish, self).__init__(heading, set_point, learning_rate)
+
+    def step(self, environment):
+        """
+	Defines the behavior of the fish in one time step in the given
+	environment. This fish takes the average of brightness information from
+	both eyes and updates its set point to be closer to this average. This
+	fish also updates its turning probabilities to increase probability to
+	turn towards the eye with brightness closer to the updated set point.
+
+	Args:
+	    environment (``Environment``): Defines the environment in which the
+	    fish takes a step.
+
+	Returns:
+	    A list of the parameters defining the status of the fish.
+        """
+        # calculate differences from both eyes
+        brightness_left = environment.left_eye(self.heading).mean()
+        brightness_right = environment.right_eye(self.heading).mean()
+
+        # update set points to be closer to observed brightness from each eye
+        update1 = self.set_point[0] - brightness_left
+        update2 = self.set_point[1] - brightness_right
+        self.set_point[0] -= self.learning_rate * update1
+        self.set_point[1] -= self.learning_rate * update2
+
+        # update turn probabilities to turn towards eye closer to its set point
+        # first calculate differences from set points on both sides
+        diff_left = np.abs(brightness_left - self.set_point[0])
+        diff_right = np.abs(brightness_right - self.set_point[1])
+        # then calculate difference of differences
+        diff_left_right = diff_left - diff_right
+        # update turn probabilities appropriately
+        self.p_right += self.learning_rate * diff_left_right
+        self.p_left -= self.learning_rate * diff_left_right
+        # clip updated values to maintain valid probabilities
+        self.p_right = np.clip(self.p_right, 0.0, 1.0)
+        self.p_left = np.clip(self.p_left, 0.0, 1.0)
+
+        # turn fish
+        self.turn()
+
+        # step environment
+        environment.step()
+
+        # return updated parameters
+        return [self.heading, self.set_point, self.p_left, self.p_right]
+
+    def run(self, environment, timesteps):
+        """
+	Defines the behavior of the fish over multiple time steps.
+
+	Args:
+	    environment (``Environment``): Defines the environment in which the
+	    fish takes a step.
+
+	    timesteps (int): Defines the number of time steps to perform.
+
+	Returns:
+	    An ``np.ndarray`` of the parameters defining the status of the fish
+	    at each time point.
+        """
+        params = [[self.heading, self.set_point, self.p_left, self.p_right]]
+        for i in range(timesteps):
+            params.append(self.step(environment))
+        params = np.stack(params)
+        return params
+
