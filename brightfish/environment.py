@@ -118,15 +118,15 @@ class SinusoidalCircle(Environment):
     
     def left_eye(self, heading):
         """
-        Returns the information observed by the left eye.
+	Returns the information observed by the left eye.
 
-        Args:
-            heading (float): Gives the heading in radians from which to gather
-            left eye information.
+	Args:
+	    heading (float): Gives the heading in radians from which to gather
+	    left eye information.
 
-        Returns:
-            An ``np.ndarray`` containing values from ``self.stage`` that are $\frac{\pi}{2}$ radians
-            counterclockwise to ``heading``.
+	Returns:
+	    An ``np.ndarray`` containing values from ``self.stage`` that are
+	    $\frac{\pi}{2}$ radians counterclockwise to ``heading``.
         """
         heading = heading % (2 * np.pi)
         step_size = (2 * np.pi) / self.shape

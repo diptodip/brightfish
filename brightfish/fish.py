@@ -94,11 +94,13 @@ class Fish:
 
     def run(self, environment, timesteps):
         """
-        Defines the behavior of the fish over multiple time steps.
-	
-        Args:
+	Defines the behavior of the fish over multiple time steps.
+
+	Args:
 	    environment (``Environment``): Defines the environment in which the
 	    fish takes a step.
+
+	    timesteps (int): Defines the number of time steps to perform.
         """
         raise NotImplementedError
 
