@@ -10,14 +10,15 @@ class Fish:
     Args:
 	heading (float): Defines the heading in radians of the fish.
 
-	set_point (float or list of floats, optional): Defines the set point of the fish,
-	i.e. the intensity/ies that the fish should seek to turn towards.
+	set_point (float or list of floats, optional): Defines the set point of
+	the fish, i.e. the intensity/ies that the fish should seek to turn
+	towards.
 
-	learning_rate (float, optional): Defines how fast the fish updates its set point
-	and turning probabilities.
+	learning_rate (float, optional): Defines how fast the fish updates its
+	set point and turning probabilities.
 
-	turning_rate (float, optional): Defines how fast the fish turns in a given time
-	step.
+	turning_rate (float, optional): Defines how fast the fish turns in a
+	given time step.
 
     Attributes:
 	heading (float): Defines the heading in radians of the fish.
