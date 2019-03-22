@@ -70,19 +70,21 @@ class Fish:
         self.move_distance = 50.0
 
     def __str__(self):
-        message = ("{0}: heading: {1:.2f} set_point: {2:.2f} "
-                   + "p_left: {3:.2f} p_right: {4:.2f}")
+        message = ("{0}: heading: {1:.2f} position: {2} set_point: {3:.2f} "
+                   + "p_left: {4:.2f} p_right: {5:.2f}")
         return message.format(self.__class__.__name__,
                               self.heading,
+                              self.position,
                               self.set_point,
                               self.p_left,
                               self.p_right)
     
     def __repr__(self):
-        message = ("{0}: heading: {1:.2f} set_point: {2:.2f} "
-                   + "p_left: {3:.2f} p_right: {4:.2f}")
+        message = ("{0}: heading: {1:.2f} position: {2} set_point: {3:.2f} "
+                   + "p_left: {4:.2f} p_right: {5:.2f}")
         return message.format(self.__class__.__name__,
                               self.heading,
+                              self.position,
                               self.set_point,
                               self.p_left,
                               self.p_right)
@@ -373,22 +375,24 @@ class MonocularFish(Fish):
                                             learning_rate)
     
     def __str__(self):
-        message = ("{0}: heading: {1:.2f} set_point_left: {2:.2f} "
-                   + "set_point_right: {2:.2f} "
-                   + "p_left: {3:.2f} p_right: {4:.2f}")
+        message = ("{0}: heading: {1:.2f} position: {2} "
+                   + "set_point_left: {3:.2f} set_point_right: {4:.2f} "
+                   + "p_left: {5:.2f} p_right: {6:.2f}")
         return message.format(self.__class__.__name__,
                               self.heading,
+                              self.position,
                               self.set_point[0],
                               self.set_point[1],
                               self.p_left,
                               self.p_right)
     
     def __repr__(self):
-        message = ("{0}: heading: {1:.2f} set_point_left: {2:.2f} "
-                   + "set_point_right: {2:.2f} "
-                   + "p_left: {3:.2f} p_right: {4:.2f}")
+        message = ("{0}: heading: {1:.2f} position: {2} "
+                   + "set_point_left: {3:.2f} set_point_right: {4:.2f} "
+                   + "p_left: {5:.2f} p_right: {6:.2f}")
         return message.format(self.__class__.__name__,
                               self.heading,
+                              self.position,
                               self.set_point[0],
                               self.set_point[1],
                               self.p_left,
