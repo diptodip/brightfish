@@ -92,5 +92,5 @@ class SinusoidalGradient(Environment):
                                           self.stop,
                                           num=self.shape[1])
                                      + self.phase))
-            line = np.repeat(line[:, None], self.shape[0], axis=0)
+            line = np.repeat(line[None, :], self.shape[0], axis=0)
             self.stage = line
