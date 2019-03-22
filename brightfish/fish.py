@@ -13,7 +13,7 @@ class Fish:
     Args:
 	heading (float): Defines the heading in radians of the fish. The fish
 	exists in environments defined by 2D arrays where a heading of $0$
-	points directly to the top of the array from whatever position in the
+	points directly to the right of the array from whatever position in the
 	array the fish is in.
 
 	position (list of ints): Defines the position of the fish as an index
@@ -32,7 +32,7 @@ class Fish:
     Attributes:
 	heading (float): Defines the heading in radians of the fish. The fish
 	exists in environments defined by 2D arrays where a heading of $0$
-	points directly to the top of the array from whatever position in the
+	points directly to the right of the array from whatever position in the
 	array the fish is in.
 
 	position (list of ints): Defines the position of the fish as an index
