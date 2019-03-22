@@ -200,6 +200,9 @@ class BinocularFish(Fish):
 
     Args:
 	heading (float): Defines the heading in radians of the fish.
+	
+        position (list of ints): Defines the position of the fish as an index
+	into a 2D array.
 
 	set_point (float, optional): Defines the set point of the fish, i.e. the intensity
 	that the fish should seek to turn towards.
@@ -212,6 +215,9 @@ class BinocularFish(Fish):
 
     Attributes:
 	heading (float): Defines the heading in radians of the fish.
+
+	position (list of ints): Defines the position of the fish as an index
+	into a 2D array.
 
 	set_point (float): Defines the set point of the fish, i.e. the intensity
 	that the fish should seek to turn towards.
@@ -334,6 +340,9 @@ class MonocularFish(Fish):
 
     Args:
 	heading (float): Defines the heading in radians of the fish.
+	
+        position (list of ints): Defines the position of the fish as an index
+	into a 2D array.
 
 	set_point (list of floats, optional): Defines the set points of the
 	fish, i.e. the intensities that the fish should seek to turn towards
@@ -347,6 +356,9 @@ class MonocularFish(Fish):
 
     Attributes:
 	heading (float): Defines the heading in radians of the fish.
+	
+        position (list of ints): Defines the position of the fish as an index
+	into a 2D array.
 
 	set_point (list of floats): Defines the set points of the fish, i.e. the
 	intensities that the fish should seek to turn towards given information
