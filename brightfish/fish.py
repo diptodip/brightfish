@@ -183,10 +183,10 @@ class Fish:
         radius = max(shape) * 1000
         r1, c1 = pol2cart(radius,
                           (self.heading - np.pi/4) % (2 * np.pi),
-                          origin=np.flip(self.position))
+                          origin=self.position)
         r2, c2 = pol2cart(radius,
                           (self.heading - (3 * np.pi/4)) % (2 * np.pi),
-                          origin=np.flip(self.position))
+                          origin=self.position)
         r = [self.position[0], r1, r2]
         c = [self.position[1], c1, c2]
         return polygon(r, c, shape=shape)
