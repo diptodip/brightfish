@@ -1,4 +1,7 @@
 import numpy as np
+from skimage.draw import polygon
+
+from .utils import *
 
 class Fish:
     """
@@ -8,7 +11,13 @@ class Fish:
     step and running for multiple time steps.
 
     Args:
-	heading (float): Defines the heading in radians of the fish.
+	heading (float): Defines the heading in radians of the fish. The fish
+	exists in environments defined by 2D arrays where a heading of $0$
+	points directly to the top of the array from whatever position in the
+	array the fish is in.
+
+	position (list of ints): Defines the position of the fish as an index
+	into a 2D array.
 
 	set_point (float or list of floats, optional): Defines the set point of
 	the fish, i.e. the intensity/ies that the fish should seek to turn
@@ -21,7 +30,13 @@ class Fish:
 	given time step.
 
     Attributes:
-	heading (float): Defines the heading in radians of the fish.
+	heading (float): Defines the heading in radians of the fish. The fish
+	exists in environments defined by 2D arrays where a heading of $0$
+	points directly to the top of the array from whatever position in the
+	array the fish is in.
+
+	position (list of ints): Defines the position of the fish as an index
+	into a 2D array.
 
 	set_point (float): Defines the set point of the fish, i.e. the intensity
 	that the fish should seek to turn towards.
@@ -40,15 +55,19 @@ class Fish:
     """
     def __init__(self,
                  heading,
+                 position,
                  set_point=0.5,
                  learning_rate=5e-2,
                  turning_rate=1e-2):
         self.heading = heading
+        self.position = position
         self.set_point = set_point
         self.learning_rate = learning_rate
         self.turning_rate = turning_rate
         self.p_right = 0.5
         self.p_left = 0.5
+        self.p_move = 0.005
+        self.move_distance = 50.0
 
     def __str__(self):
         message = ("{0}: heading: {1:.2f} set_point: {2:.2f} "
@@ -80,6 +99,20 @@ class Fish:
             turn_direction = -1
         self.heading += turn_direction * self.turning_rate
         self.heading = self.heading % (2 * np.pi)
+    
+    def move(self, shape):
+        """
+	Updates ``self.position`` by moving ``self.move_distance`` units in a
+	direction given by ``self.heading``.
+        """
+        # decide if moving
+        moving = np.random.binomial(1, self.p_move)
+        # if moving, update position to move
+        # by ``self.move_distance`` in ``self.heading`` direction
+        if moving:
+            r, c = pol2cart(self.move_distance, self.heading, origin=self.position)
+            if r >= 0 and r < shape[0] and c >= 0 and c < shape[1]:
+                self.position = [r, c]
 
     def step(self, environment):
         """
@@ -103,6 +136,60 @@ class Fish:
 	    timesteps (int): Defines the number of time steps to perform.
         """
         raise NotImplementedError
+
+    def left_eye(self, shape):
+        """
+	Returns the coordinates in a 2D array of dimensions ``shape`` observed
+	by the left eye.
+
+	Args:
+	    shape (tuple of ints): Gives the shape of the 2D array in which the
+	    fish can observe information.
+
+	Returns:
+	    A tuple of ``np.ndarray``s ``rr`` and ``cc`` containing row
+	    coordinates and column coordinates of a $\frac{\pi}{2}$ degree field
+	    of view observed by the fish in a direction $\frac{\pi}{2}$ from its
+	    heading. These values may be used to index dirrectly into a 2D
+	    array, e.g. ``arr[rr, cc]``.
+        """
+        radius = max(shape) * 1000
+        r1, c1 = pol2cart(radius,
+                          (self.heading + np.pi/4) % (2 * np.pi),
+                          origin=self.position)
+        r2, c2 = pol2cart(radius,
+                          (self.heading + (3 * np.pi/4)) % (2 * np.pi),
+                          origin=self.position)
+        r = [self.position[0], r1, r2]
+        c = [self.position[1], c1, c2]
+        return polygon(r, c, shape=shape)
+    
+    def right_eye(self, shape):
+        """
+	Returns the coordinates in a 2D array of dimensions ``shape`` observed
+	by the right eye.
+
+	Args:
+	    shape (tuple of ints): Gives the shape of the 2D array in which the
+	    fish can observe information.
+
+	Returns:
+	    A tuple of ``np.ndarray``s ``rr`` and ``cc`` containing row
+	    coordinates and column coordinates of a $\frac{\pi}{2}$ degree field
+	    of view observed by the fish in a direction $-\frac{\pi}{2}$ from
+	    its heading. These values may be used to index dirrectly into a 2D
+	    array, e.g. ``arr[rr, cc]``.
+        """
+        radius = max(shape) * 1000
+        r1, c1 = pol2cart(radius,
+                          (self.heading - np.pi/4) % (2 * np.pi),
+                          origin=np.flip(self.position))
+        r2, c2 = pol2cart(radius,
+                          (self.heading - (3 * np.pi/4)) % (2 * np.pi),
+                          origin=np.flip(self.position))
+        r = [self.position[0], r1, r2]
+        c = [self.position[1], c1, c2]
+        return polygon(r, c, shape=shape)
 
 class BinocularFish(Fish):
     """
@@ -139,8 +226,17 @@ class BinocularFish(Fish):
 	p_left (float): Defines the probability of turning counterclockwise.
 	Should be clamped to $[0, 1]$.
     """
-    def __init__(self, heading, set_point=0.5, learning_rate=5e-2):
-        super(BinocularFish, self).__init__(heading, set_point, learning_rate)
+    def __init__(self,
+                 heading,
+                 position,
+                 set_point=0.5,
+                 learning_rate=5e-2,
+                 turning_rate=1e-2):
+        super(BinocularFish, self).__init__(heading,
+                                            position,
+                                            set_point,
+                                            learning_rate,
+                                            turning_rate)
 
     def step(self, environment):
         """
@@ -157,9 +253,18 @@ class BinocularFish(Fish):
 	Returns:
 	    A list of the parameters defining the status of the fish.
         """
-        # calculate differences from both eyes
-        brightness_left = environment.left_eye(self.heading).mean()
-        brightness_right = environment.right_eye(self.heading).mean()
+        # collect brightness information from both eyes
+        left_fov = self.left_eye(environment.shape)
+        right_fov = self.right_eye(environment.shape)
+        # check for empty fovs (due to being at edge of environment)
+        if left_fov[0].size > 0 and left_fov[1].size > 0:
+            brightness_left = environment.stage[left_fov[0], left_fov[1]].mean()
+        else:
+            brightness_left = 0.0
+        if right_fov[0].size > 0 and right_fov[1].size > 0:
+            brightness_right = environment.stage[right_fov[0], right_fov[1]].mean()
+        else:
+            brightness_right = 0.0
 
         # update set point to be closer to mean of two eyes
         update = self.set_point - np.mean([brightness_left, brightness_right])
@@ -181,11 +286,19 @@ class BinocularFish(Fish):
         # turn fish
         self.turn()
 
+        # move fish
+        self.move(environment.shape)
+
         # step environment
         environment.step()
 
         # return updated parameters
-        return [self.heading, self.set_point, self.p_left, self.p_right]
+        return [self.heading,
+                self.position[0],
+                self.position[1],
+                self.set_point,
+                self.p_left,
+                self.p_right]
 
     def run(self, environment, timesteps):
         """
@@ -201,7 +314,12 @@ class BinocularFish(Fish):
 	    An ``np.ndarray`` of the parameters defining the status of the fish
 	    at each time point.
         """
-        params = [[self.heading, self.set_point, self.p_left, self.p_right]]
+        params = [[self.heading,
+                   self.position[0],
+                   self.position[1],
+                   self.set_point,
+                   self.p_left,
+                   self.p_right]]
         for i in range(timesteps):
             params.append(self.step(environment))
         params = np.stack(params)
@@ -244,8 +362,15 @@ class MonocularFish(Fish):
 	p_left (float): Defines the probability of turning counterclockwise.
 	Should be clamped to $[0, 1]$.
     """
-    def __init__(self, heading, set_point=[0.5, 0.5], learning_rate=5e-2):
-        super(MonocularFish, self).__init__(heading, set_point, learning_rate)
+    def __init__(self,
+                 heading,
+                 position,
+                 set_point=[0.5, 0.5],
+                 learning_rate=5e-2):
+        super(MonocularFish, self).__init__(heading,
+                                            position,
+                                            set_point,
+                                            learning_rate)
     
     def __str__(self):
         message = ("{0}: heading: {1:.2f} set_point_left: {2:.2f} "
@@ -284,9 +409,18 @@ class MonocularFish(Fish):
 	Returns:
 	    A list of the parameters defining the status of the fish.
         """
-        # calculate differences from both eyes
-        brightness_left = environment.left_eye(self.heading).mean()
-        brightness_right = environment.right_eye(self.heading).mean()
+        # collect brightness information from both eyes
+        left_fov = self.left_eye(environment.shape)
+        right_fov = self.right_eye(environment.shape)
+        # check for empty fovs (due to being at edge of environment)
+        if left_fov[0].size > 0 and left_fov[1].size > 0:
+            brightness_left = environment.stage[left_fov[0], left_fov[1]].mean()
+        else:
+            brightness_left = 0.0
+        if right_fov[0].size > 0 and right_fov[1].size > 0:
+            brightness_right = environment.stage[right_fov[0], right_fov[1]].mean()
+        else:
+            brightness_right = 0.0
 
         # update set points to be closer to observed brightness from each eye
         update1 = self.set_point[0] - brightness_left
@@ -309,12 +443,17 @@ class MonocularFish(Fish):
 
         # turn fish
         self.turn()
+        
+        # move fish
+        self.move(environment.shape)
 
         # step environment
         environment.step()
 
         # return updated parameters
         return [self.heading,
+                self.position[0],
+                self.position[1],
                 self.set_point[0],
                 self.set_point[1],
                 self.p_left,
@@ -335,6 +474,8 @@ class MonocularFish(Fish):
 	    at each time point.
         """
         params = [[self.heading,
+                   self.position[0],
+                   self.position[1],
                    self.set_point[0],
                    self.set_point[1],
                    self.p_left,
