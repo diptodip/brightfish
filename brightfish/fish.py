@@ -58,7 +58,9 @@ class Fish:
                  position,
                  set_point=0.5,
                  learning_rate=5e-2,
-                 turning_rate=1e-2):
+                 turning_rate=1e-2,
+                 p_move=0.005,
+                 move_distance=50.0):
         self.heading = heading
         self.position = position
         self.set_point = set_point
@@ -239,12 +241,16 @@ class BinocularFish(Fish):
                  position,
                  set_point=0.5,
                  learning_rate=5e-2,
-                 turning_rate=1e-2):
+                 turning_rate=1e-2,
+                 p_move=0.005,
+                 move_distance=50.0):
         super(BinocularFish, self).__init__(heading,
                                             position,
                                             set_point,
                                             learning_rate,
-                                            turning_rate)
+                                            turning_rate,
+                                            p_move,
+                                            move_distance)
 
     def step(self, environment):
         """
@@ -380,11 +386,17 @@ class MonocularFish(Fish):
                  heading,
                  position,
                  set_point=[0.5, 0.5],
-                 learning_rate=5e-2):
+                 learning_rate=5e-2,
+                 turning_rate=1e-2,
+                 p_move=0.005,
+                 move_distance=50.0):
         super(MonocularFish, self).__init__(heading,
                                             position,
                                             set_point,
-                                            learning_rate)
+                                            learning_rate,
+                                            turning_rate,
+                                            p_move,
+                                            move_distance)
     
     def __str__(self):
         message = ("{0}: heading: {1:.2f} position: {2} "
