@@ -25,6 +25,9 @@ class Fish:
 
 	learning_rate (float, optional): Defines how fast the fish updates its
 	set point and turning probabilities.
+	
+	turning_cap (float, optional): Defines maximum probability for a given
+	direction.
 
 	turning_rate (float, optional): Defines how fast the fish turns in a
 	given time step.
@@ -49,8 +52,10 @@ class Fish:
 
 	learning_rate(float): Defines how fast the fish updates its set point
 	and turning probabilities.
+	
+	turning_cap (float): Defines maximum probability for a given direction.
 
-	turning_rate(float): Defines how fast the fish turns in a given time
+	turning_rate (float): Defines how fast the fish turns in a given time
 	step.
 
 	p_right (float): Defines the probability of turning clockwise. Should be
@@ -69,6 +74,7 @@ class Fish:
                  position,
                  set_point=0.5,
                  learning_rate=5e-2,
+                 turning_cap=1.0,
                  turning_rate=1e-2,
                  p_move=0.005,
                  move_distance=50.0):
@@ -76,6 +82,7 @@ class Fish:
         self.position = position
         self.set_point = set_point
         self.learning_rate = learning_rate
+        self.turning_cap = turning_cap
         self.turning_rate = turning_rate
         self.p_right = 0.5
         self.p_left = 0.5
@@ -222,6 +229,9 @@ class BinocularFish(Fish):
 
 	learning_rate (float, optional): Defines how fast the fish updates its set point
 	and turning probabilities.
+	
+        turning_cap (float, optional): Defines maximum probability for a given
+	direction.
 
 	turning_rate (float, optional): Defines how fast the fish turns in a given time
 	step.
@@ -243,6 +253,8 @@ class BinocularFish(Fish):
 
 	learning_rate(float): Defines how fast the fish updates its set point
 	and turning probabilities.
+	
+        turning_cap (float): Defines maximum probability for a given direction.
 
 	turning_rate(float): Defines how fast the fish turns in a given time
 	step.
@@ -263,6 +275,7 @@ class BinocularFish(Fish):
                  position,
                  set_point=0.5,
                  learning_rate=5e-2,
+                 turning_cap=1.0,
                  turning_rate=1e-2,
                  p_move=0.005,
                  move_distance=50.0):
@@ -270,6 +283,7 @@ class BinocularFish(Fish):
                                             position,
                                             set_point,
                                             learning_rate,
+                                            turning_cap,
                                             turning_rate,
                                             p_move,
                                             move_distance)
@@ -313,11 +327,10 @@ class BinocularFish(Fish):
         # then calculate difference of differences
         diff_left_right = diff_left - diff_right
         # update turn probabilities appropriately
-        self.p_right += self.learning_rate * diff_left_right
         self.p_left -= self.learning_rate * diff_left_right
         # clip updated values to maintain valid probabilities
-        self.p_right = np.clip(self.p_right, 0.0, 1.0)
-        self.p_left = np.clip(self.p_left, 0.0, 1.0)
+        self.p_left = np.clip(self.p_left, 0.0, self.turning_cap)
+        self.p_right = self.turning_cap - self.p_left
 
         # turn fish
         self.turn()
@@ -378,6 +391,9 @@ class MonocularFish(Fish):
 
 	learning_rate (float, optional): Defines how fast the fish updates its
 	set points and turning probabilities.
+	
+        turning_cap (float, optional): Defines maximum probability for a given
+	direction.
 
 	turning_rate (float, optional): Defines how fast the fish turns in a
 	given time step.
@@ -400,6 +416,8 @@ class MonocularFish(Fish):
 
 	learning_rate (float): Defines how fast the fish updates its set points
 	and turning probabilities.
+	
+        turning_cap (float): Defines maximum probability for a given direction.
 
 	turning_rate (float): Defines how fast the fish turns in a given time
 	step.
@@ -420,6 +438,7 @@ class MonocularFish(Fish):
                  position,
                  set_point=[0.5, 0.5],
                  learning_rate=5e-2,
+                 turning_cap=1.0,
                  turning_rate=1e-2,
                  p_move=0.005,
                  move_distance=50.0):
@@ -427,6 +446,7 @@ class MonocularFish(Fish):
                                             position,
                                             set_point,
                                             learning_rate,
+                                            turning_cap,
                                             turning_rate,
                                             p_move,
                                             move_distance)
@@ -496,11 +516,10 @@ class MonocularFish(Fish):
         # then calculate difference of differences
         diff_left_right = diff_left - diff_right
         # update turn probabilities appropriately
-        self.p_right += self.learning_rate * diff_left_right
         self.p_left -= self.learning_rate * diff_left_right
         # clip updated values to maintain valid probabilities
-        self.p_right = np.clip(self.p_right, 0.0, 1.0)
-        self.p_left = np.clip(self.p_left, 0.0, 1.0)
+        self.p_left = np.clip(self.p_left, 0.0, self.turning_cap)
+        self.p_right = self.turning_cap - self.p_left
 
         # turn fish
         self.turn()
