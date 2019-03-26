@@ -29,6 +29,12 @@ class Fish:
 	turning_rate (float, optional): Defines how fast the fish turns in a
 	given time step.
 
+	p_move (float, optional): Defines probability of moving on a given time
+	step.
+
+	move_distance (float, optional): Defines number of units moved in a
+	direction given by ``self.heading`` if fish moves in a given time step.
+
     Attributes:
 	heading (float): Defines the heading in radians of the fish. The fish
 	exists in environments defined by 2D arrays where a heading of $0$
@@ -52,6 +58,11 @@ class Fish:
 
 	p_left (float): Defines the probability of turning counterclockwise.
 	Should be clamped to $[0, 1]$.
+	
+        p_move (float): Defines probability of moving on a given time step.
+
+	move_distance (float): Defines number of units moved in a direction
+	given by ``self.heading`` if fish moves in a given time step.
     """
     def __init__(self,
                  heading,
@@ -214,6 +225,12 @@ class BinocularFish(Fish):
 
 	turning_rate (float, optional): Defines how fast the fish turns in a given time
 	step.
+	
+        p_move (float, optional): Defines probability of moving on a given time
+	step.
+
+	move_distance (float, optional): Defines number of units moved in a
+	direction given by ``self.heading`` if fish moves in a given time step.
 
     Attributes:
 	heading (float): Defines the heading in radians of the fish.
@@ -235,6 +252,11 @@ class BinocularFish(Fish):
 
 	p_left (float): Defines the probability of turning counterclockwise.
 	Should be clamped to $[0, 1]$.
+	
+        p_move (float): Defines probability of moving on a given time step.
+
+	move_distance (float): Defines number of units moved in a direction
+	given by ``self.heading`` if fish moves in a given time step.
     """
     def __init__(self,
                  heading,
@@ -359,6 +381,12 @@ class MonocularFish(Fish):
 
 	turning_rate (float, optional): Defines how fast the fish turns in a
 	given time step.
+	
+        p_move (float, optional): Defines probability of moving on a given time
+	step.
+
+	move_distance (float, optional): Defines number of units moved in a
+	direction given by ``self.heading`` if fish moves in a given time step.
 
     Attributes:
 	heading (float): Defines the heading in radians of the fish.
@@ -381,6 +409,11 @@ class MonocularFish(Fish):
 
 	p_left (float): Defines the probability of turning counterclockwise.
 	Should be clamped to $[0, 1]$.
+	
+	p_move (float): Defines probability of moving on a given time step.
+
+	move_distance (float): Defines number of units moved in a direction
+	given by ``self.heading`` if fish moves in a given time step.
     """
     def __init__(self,
                  heading,
