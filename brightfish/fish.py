@@ -75,19 +75,20 @@ class Fish:
                  set_point=0.5,
                  learning_rate=5e-2,
                  turning_cap=1.0,
-                 turning_rate=1e-2,
-                 p_move=0.005,
-                 move_distance=50.0):
+                 turning_rate=5e-2,
+                 p_move=0.2,
+                 move_distance=5.0):
         self.heading = heading
         self.position = position
         self.set_point = set_point
         self.learning_rate = learning_rate
         self.turning_cap = turning_cap
         self.turning_rate = turning_rate
-        self.p_right = 0.5
-        self.p_left = 0.5
-        self.p_move = 0.005
-        self.move_distance = 50.0
+        self.p_right = 1.0/3.0
+        self.p_left = 1.0/3.0
+        self.p_noturn = 1.0/3.0
+        self.p_move = p_move
+        self.move_distance = move_distance
 
     def __str__(self):
         message = ("{0}: heading: {1:.2f} position: {2} set_point: {3:.2f} "
@@ -114,11 +115,25 @@ class Fish:
 	Updates ``self.heading`` by ``self.turning_rate`` radians in a random
 	direction determined by the turning probabilities.
         """
+        # determine direction of turn from multinomial distribution
+        # 0 if turning counterclockwise
+        # 1 if turning clockwise
+        # 2 if not turning
+        turn_direction = np.random.multinomial(1,
+                                               [self.p_left,
+                                                self.p_right,
+                                                self.p_noturn])
+        turn_direction = turn_direction.argmax()
+        # determine whether to add/subtract/do nothing to heading (radians)
         # 1 if turning counterclockwise
-        turn_direction = np.random.binomial(1, self.p_left)
         # -1 if turning clockwise
+        # 0 if not turning
         if turn_direction == 0:
+            turn_direction = 1
+        elif turn_direction == 1:
             turn_direction = -1
+        elif turn_direction == 2:
+            turn_direction = 0
         self.heading += turn_direction * self.turning_rate
         self.heading = self.heading % (2 * np.pi)
     
@@ -132,6 +147,7 @@ class Fish:
         # if moving, update position to move
         # by ``self.move_distance`` in ``self.heading`` direction
         if moving:
+            self.turn()
             r, c = pol2cart(self.move_distance, self.heading, origin=self.position)
             if r >= 0 and r < shape[0] and c >= 0 and c < shape[1]:
                 self.position = [r, c]
@@ -276,9 +292,9 @@ class BinocularFish(Fish):
                  set_point=0.5,
                  learning_rate=5e-2,
                  turning_cap=1.0,
-                 turning_rate=1e-2,
-                 p_move=0.005,
-                 move_distance=50.0):
+                 turning_rate=5e-2,
+                 p_move=0.2,
+                 move_distance=5.0):
         super(BinocularFish, self).__init__(heading,
                                             position,
                                             set_point,
@@ -331,9 +347,8 @@ class BinocularFish(Fish):
         # clip updated values to maintain valid probabilities
         self.p_left = np.clip(self.p_left, 0.0, self.turning_cap)
         self.p_right = self.turning_cap - self.p_left
-
-        # turn fish
-        self.turn()
+        self.p_noturn = 1.0 - (self.p_left + self.p_right)
+        self.p_noturn = np.clip(self.p_noturn, 0.0, 1.0)
 
         # move fish
         self.move(environment.shape)
@@ -347,7 +362,8 @@ class BinocularFish(Fish):
                 self.position[1],
                 self.set_point,
                 self.p_left,
-                self.p_right]
+                self.p_right,
+                self.p_noturn]
 
     def run(self, environment, timesteps):
         """
@@ -368,7 +384,8 @@ class BinocularFish(Fish):
                    self.position[1],
                    self.set_point,
                    self.p_left,
-                   self.p_right]]
+                   self.p_right,
+                   self.p_noturn]]
         for i in range(timesteps):
             params.append(self.step(environment))
         params = np.stack(params)
@@ -439,9 +456,9 @@ class MonocularFish(Fish):
                  set_point=[0.5, 0.5],
                  learning_rate=5e-2,
                  turning_cap=1.0,
-                 turning_rate=1e-2,
-                 p_move=0.005,
-                 move_distance=50.0):
+                 turning_rate=5e-2,
+                 p_move=0.2,
+                 move_distance=5.0):
         super(MonocularFish, self).__init__(heading,
                                             position,
                                             set_point,
@@ -520,10 +537,9 @@ class MonocularFish(Fish):
         # clip updated values to maintain valid probabilities
         self.p_left = np.clip(self.p_left, 0.0, self.turning_cap)
         self.p_right = self.turning_cap - self.p_left
+        self.p_noturn = 1.0 - (self.p_left + self.p_right)
+        self.p_noturn = np.clip(self.p_noturn, 0.0, 1.0)
 
-        # turn fish
-        self.turn()
-        
         # move fish
         self.move(environment.shape)
 
@@ -537,7 +553,8 @@ class MonocularFish(Fish):
                 self.set_point[0],
                 self.set_point[1],
                 self.p_left,
-                self.p_right]
+                self.p_right,
+                self.p_noturn]
 
     def run(self, environment, timesteps):
         """
@@ -559,7 +576,8 @@ class MonocularFish(Fish):
                    self.set_point[0],
                    self.set_point[1],
                    self.p_left,
-                   self.p_right]]
+                   self.p_right,
+                   self.p_noturn]]
         for i in range(timesteps):
             params.append(self.step(environment))
         params = np.stack(params)
