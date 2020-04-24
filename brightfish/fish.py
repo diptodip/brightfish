@@ -6,162 +6,169 @@ from .utils import *
 class Fish:
     """
     Base class for defining a simulated zebrafish that respond to brightness. A
-    base fish takes at least a heading to define its starting orientation.
-    Subclasses of fish should implement methods for what happens in a given time
-    step and running for multiple time steps.
+    base fish takes at least a heading and position to define its starting
+    orientation. Subclasses of fish should implement methods for turning
+    logic, what happens in a given time step, and running for multiple time
+    steps.
 
     Args:
-	heading (float): Defines the heading in radians of the fish. The fish
-	exists in environments defined by 2D arrays where a heading of $0$
-	points directly to the right of the array from whatever position in the
-	array the fish is in.
+        heading (float): Defines the heading in radians of the fish. The fish
+        exists in environments defined by 2D arrays where a heading of $0$
+        points directly to the right of the array from whatever position in the
+        array the fish is in.
 
-	position (list of ints): Defines the position of the fish as an index
-	into a 2D array.
+        position (list of ints): Defines the position of the fish as an index
+        into a 2D array.
 
-	set_point (float or list of floats, optional): Defines the set point of
-	the fish, i.e. the intensity/ies that the fish should seek to turn
-	towards.
+        set_point (float, optional): Defines the set point of
+        the fish, i.e. the intensity/ies that the fish should seek to turn
+        towards.
 
-	learning_rate (float, optional): Defines how fast the fish updates its
-	set point and turning probabilities.
+        max_diff (float, optional): Defines the maximum difference between the
+        brightness observed by an eye and the set point that should be
+        considered. This is used to normalize the brightness difference between
+        an observation from an eye and the set point when deciding how to
+        interpolate between the no error and high error turn distribution
+        samples.
+
+        learning_rate (float, optional): Defines how fast the fish updates its
+        set point and turning probabilities.
+
+        p_move (float, optional): Defines probability of moving on a given time
+        step.
+
+        move_dist (tuple, optional): A tuple  of floats defining the mean and
+        standard deviation of move distance on a given time step.
+
+        no_turn_dist (tuple, optional): A tuple of floats defining the mean and
+        standard deviation of heading change in radians when there is no
+        difference between the observed brightnesses in each eye and the set
+        point.
+        
+        left_turn_dist (tuple, optional): A tuple of floats defining the mean
+        and standard deviation of heading change in radians when there is a
+        difference of ``self.max_diff`` between the right eye and the set
+        point, meaning the fish is turning left. In our coordinate system, a
+        change of positive radians is a left (counterclockwise) turn.
+        
+        right_turn_dist (tuple, optional): A tuple of floats defining the mean
+        and standard deviation of heading change in radians when there is a
+        difference of ``self.max_diff`` between the left eye and the set point,
+        meaning the fish is turning right. In our coordinate system, a change
+        of negative radians is a right (clockwise) turn.
 	
-	turning_cap (float, optional): Defines maximum probability for a given
-	direction.
-	
-	turning_scale (float, optional): Defines scaling of ``turning_rate`` due
-	to angular distance from set point.
-
-	turning_rate (float, optional): Defines how fast the fish turns in a
-	given time step.
-
-	p_move (float, optional): Defines probability of moving on a given time
-	step.
-
-	move_distance (float, optional): Defines number of units moved in a
-	direction given by ``self.heading`` if fish moves in a given time step.
-
     Attributes:
-	heading (float): Defines the heading in radians of the fish. The fish
-	exists in environments defined by 2D arrays where a heading of $0$
-	points directly to the right of the array from whatever position in the
-	array the fish is in.
+        heading (float): Defines the heading in radians of the fish. The fish
+        exists in environments defined by 2D arrays where a heading of $0$
+        points directly to the right of the array from whatever position in the
+        array the fish is in.
 
-	position (list of ints): Defines the position of the fish as an index
-	into a 2D array.
+        position (list of ints): Defines the position of the fish as an index
+        into a 2D array.
 
-	set_point (float): Defines the set point of the fish, i.e. the intensity
-	that the fish should seek to turn towards.
+        set_point (float, optional): Defines the set point of the fish, i.e.
+        the intensity/ies that the fish should seek to turn towards.
 
-	learning_rate(float): Defines how fast the fish updates its set point
-	and turning probabilities.
-	
-	turning_cap (float): Defines maximum probability for a given direction.
-	
-	turning_scale (float): Defines scaling of ``turning_rate`` due to
-	angular distance from set point.
+        max_diff (float): Defines the maximum difference between the brightness
+        observed by an eye and the set point that should be considered. This is
+        used to normalize the brightness difference between an observation from
+        an eye and the set point when deciding how to interpolate between the
+        no error and high error turn distribution samples.
 
-	turning_rate (float): Defines how fast the fish turns in a given time
-	step.
+        learning_rate (float): Defines how fast the fish updates its set point
+        and turning probabilities.
 
-	p_right (float): Defines the probability of turning clockwise. Should be
-	clamped to $[0, 1]$.
-
-	p_left (float): Defines the probability of turning counterclockwise.
-	Should be clamped to $[0, 1]$.
-	
         p_move (float): Defines probability of moving on a given time step.
 
-	move_distance (float): Defines number of units moved in a direction
-	given by ``self.heading`` if fish moves in a given time step.
+        move_dist (tuple): A tuple  of floats defining the mean and standard
+        deviation of move distance on a given time step.
+
+        no_turn_dist (tuple): A tuple of floats defining the mean and standard
+        deviation of heading change in radians when there is no difference
+        between the observed brightnesses in each eye and the set point.
+        
+        left_turn_dist (tuple): A tuple of floats defining the mean and
+        standard deviation of heading change in radians when there is a
+        difference of ``self.max_diff`` between the right eye and the set
+        point, meaning the fish is turning left. In our coordinate system, a
+        change of positive radians is a left (counterclockwise) turn.
+        
+        right_turn_dist (tuple): A tuple of floats defining the mean and
+        standard deviation of heading change in radians when there is a
+        difference of ``self.max_diff`` between the left eye and the set point,
+        meaning the fish is turning right. In our coordinate system, a change
+        of negative radians is a right (clockwise) turn.
     """
     def __init__(self,
                  heading,
                  position,
                  set_point=0.5,
+                 max_diff=0.75,
                  learning_rate=5e-2,
-                 turning_cap=1.0,
-                 turning_scale=2.0,
-                 turning_rate=5e-2,
                  p_move=0.2,
-                 move_distance=5.0):
+                 move_dist=(1.0, 1.0),
+                 no_turn_dist=(0.01, 0.50),
+                 left_turn_dist=(0.52, 0.59),
+                 right_turn_dist=(-0.52, 0.59)):
         self.heading = heading
         self.position = position
         self.set_point = set_point
         self.learning_rate = learning_rate
-        self.turning_cap = turning_cap
-        self.turning_scale = turning_scale
-        self.turning_rate = turning_rate
-        self.p_right = 1.0/3.0
-        self.p_left = 1.0/3.0
-        self.p_noturn = 1.0/3.0
         self.p_move = p_move
-        self.move_distance = move_distance
+        self.move_dist = move_dist
+        self.no_turn_dist = no_turn_dist
+        self.left_turn_dist = left_turn_dist
+        self.right_turn_dist = right_turn_dist
 
     def __str__(self):
         message = ("{0}: heading: {1:.2f} position: {2} set_point: {3:.2f} "
-                   + "p_left: {4:.2f} p_right: {5:.2f}")
+                   + "mu_left: {4:.2f} mu_right: {5:.2f}")
         return message.format(self.__class__.__name__,
                               self.heading,
                               self.position,
                               self.set_point,
-                              self.p_left,
-                              self.p_right)
+                              self.left_turn_dist[0],
+                              self.right_turn_dist[0])
     
     def __repr__(self):
         message = ("{0}: heading: {1:.2f} position: {2} set_point: {3:.2f} "
-                   + "p_left: {4:.2f} p_right: {5:.2f}")
+                   + "mu_left: {4:.2f} mu_right: {5:.2f}")
         return message.format(self.__class__.__name__,
                               self.heading,
                               self.position,
                               self.set_point,
-                              self.p_left,
-                              self.p_right)
+                              self.left_turn_dist[0],
+                              self.right_turn_dist[0])
 
-    def turn(self):
+    def turn(self, environment):
         """
-	Updates ``self.heading`` by ``self.turning_rate`` radians in a random
-	direction determined by the turning probabilities.
+        Updates ``self.heading`` by an angle chosen as a weighted mixture of
+        samples from the current Fish's high error turning distribution and no
+        error turning distribution.
         """
-        #TODO: need to change how turning works to choose angles from a
-        #      distribution based on the error from set point
-        f
-        # determine direction of turn from multinomial distribution
-        # 0 if turning counterclockwise
-        # 1 if turning clockwise
-        # 2 if not turning
-        turn_direction = np.random.multinomial(1,
-                                               [self.p_left,
-                                                self.p_right,
-                                                self.p_noturn])
-        turn_direction = turn_direction.argmax()
-        # determine whether to add/subtract/do nothing to heading (radians)
-        # 1 if turning counterclockwise
-        # -1 if turning clockwise
-        # 0 if not turning
-        if turn_direction == 0:
-            turn_direction = 1
-        elif turn_direction == 1:
-            turn_direction = -1
-        elif turn_direction == 2:
-            turn_direction = 0
-        self.heading += turn_direction * self.turning_rate
-        self.heading = self.heading % (2 * np.pi)
+        raise NotImplementedError
     
-    def move(self, shape):
+    def move(self, environment):
         """
-	Updates ``self.position`` by moving ``self.move_distance`` units in a
-	direction given by ``self.heading``.
+        Updates ``self.position`` by moving in a direction given by
+        ``self.heading`` by a distance sampled from a Normal distribution with
+        this Fish's movement distribution.
         """
+        # update fish heading
+        theta = self.turn(environment)
         # decide if moving
         moving = np.random.binomial(1, self.p_move)
-        # if moving, update position to move
-        # by ``self.move_distance`` in ``self.heading`` direction
+        move_distance = 0.0
+        # if moving, update position by moving
+        # ``move_distance`` in ``self.heading`` direction
         if moving:
-            self.turn()
-            r, c = pol2cart(self.move_distance, self.heading, origin=self.position)
+            move_distance = np.random.normal(self.move_dist['mu'],
+                                             self.move_dist['sigma'])
+            shape = environment.shape
+            r, c = pol2cart(move_distance, self.heading, origin=self.position)
             if r >= 0 and r < shape[0] and c >= 0 and c < shape[1]:
                 self.position = [r, c]
+        return (move_distance, theta)
 
     def step(self, environment):
         """
@@ -240,82 +247,173 @@ class Fish:
         c = [self.position[1], c1, c2]
         return polygon(r, c, shape=shape)
 
+    def brightness_left(self, environment):
+        # collect brightness information from left eyes
+        left_fov = self.left_eye(environment.shape)
+        # check for empty fov (due to being at edge of environment)
+        if left_fov[0].size > 0 and left_fov[1].size > 0:
+            brightness_left = environment.stage[left_fov[0], left_fov[1]].mean()
+        else:
+            brightness_left = 0.0
+        return brightness_left
+    
+    def brightness_right(self, environment):
+        # collect brightness information from right eyes
+        right_fov = self.right_eye(environment.shape)
+        # check for empty fov (due to being at edge of environment)
+        if right_fov[0].size > 0 and right_fov[1].size > 0:
+            brightness_right = environment.stage[right_fov[0], right_fov[1]].mean()
+        else:
+            brightness_right = 0.0
+        return brightness_right
+
 class BinocularFish(Fish):
     """
     Model zebrafish that integrates binocular information to update a set point
     of preferred brightness.
 
     Args:
-	heading (float): Defines the heading in radians of the fish.
-	
+        heading (float): Defines the heading in radians of the fish. The fish
+        exists in environments defined by 2D arrays where a heading of $0$
+        points directly to the right of the array from whatever position in the
+        array the fish is in.
+
         position (list of ints): Defines the position of the fish as an index
-	into a 2D array.
+        into a 2D array.
 
-	set_point (float, optional): Defines the set point of the fish, i.e. the intensity
-	that the fish should seek to turn towards.
+        set_point (float, optional): Defines the set point of
+        the fish, i.e. the intensity/ies that the fish should seek to turn
+        towards.
 
-	learning_rate (float, optional): Defines how fast the fish updates its set point
-	and turning probabilities.
-	
-        turning_cap (float, optional): Defines maximum probability for a given
-	direction.
+        max_diff (float, optional): Defines the maximum difference between the
+        brightness observed by an eye and the set point that should be
+        considered. This is used to normalize the brightness difference between
+        an observation from an eye and the set point when deciding how to
+        interpolate between the no error and high error turn distribution
+        samples.
 
-	turning_rate (float, optional): Defines how fast the fish turns in a given time
-	step.
-	
+        learning_rate (float, optional): Defines how fast the fish updates its
+        set point and turning probabilities.
+
         p_move (float, optional): Defines probability of moving on a given time
-	step.
+        step.
 
-	move_distance (float, optional): Defines number of units moved in a
-	direction given by ``self.heading`` if fish moves in a given time step.
+        move_dist (tuple, optional): A tuple  of floats defining the mean and
+        standard deviation of move distance on a given time step.
 
+        no_turn_dist (tuple, optional): A tuple of floats defining the mean and
+        standard deviation of heading change in radians when there is no
+        difference between the observed brightnesses in each eye and the set
+        point.
+        
+        left_turn_dist (tuple, optional): A tuple of floats defining the mean
+        and standard deviation of heading change in radians when there is a
+        difference of ``self.max_diff`` between the right eye and the set
+        point, meaning the fish is turning left. In our coordinate system, a
+        change of positive radians is a left (counterclockwise) turn.
+        
+        right_turn_dist (tuple, optional): A tuple of floats defining the mean
+        and standard deviation of heading change in radians when there is a
+        difference of ``self.max_diff`` between the left eye and the set point,
+        meaning the fish is turning right. In our coordinate system, a change
+        of negative radians is a right (clockwise) turn.
+	
     Attributes:
-	heading (float): Defines the heading in radians of the fish.
+        heading (float): Defines the heading in radians of the fish. The fish
+        exists in environments defined by 2D arrays where a heading of $0$
+        points directly to the right of the array from whatever position in the
+        array the fish is in.
 
-	position (list of ints): Defines the position of the fish as an index
-	into a 2D array.
+        position (list of ints): Defines the position of the fish as an index
+        into a 2D array.
 
-	set_point (float): Defines the set point of the fish, i.e. the intensity
-	that the fish should seek to turn towards.
+        set_point (float, optional): Defines the set point of the fish, i.e.
+        the intensity/ies that the fish should seek to turn towards.
 
-	learning_rate(float): Defines how fast the fish updates its set point
-	and turning probabilities.
-	
-        turning_cap (float): Defines maximum probability for a given direction.
+        max_diff (float): Defines the maximum difference between the brightness
+        observed by an eye and the set point that should be considered. This is
+        used to normalize the brightness difference between an observation from
+        an eye and the set point when deciding how to interpolate between the
+        no error and high error turn distribution samples.
 
-	turning_rate(float): Defines how fast the fish turns in a given time
-	step.
+        learning_rate (float): Defines how fast the fish updates its set point
+        and turning probabilities.
 
-	p_right (float): Defines the probability of turning clockwise. Should be
-	clamped to $[0, 1]$.
-
-	p_left (float): Defines the probability of turning counterclockwise.
-	Should be clamped to $[0, 1]$.
-	
         p_move (float): Defines probability of moving on a given time step.
 
-	move_distance (float): Defines number of units moved in a direction
-	given by ``self.heading`` if fish moves in a given time step.
+        move_dist (tuple): A tuple  of floats defining the mean and standard
+        deviation of move distance on a given time step.
+
+        no_turn_dist (tuple): A tuple of floats defining the mean and standard
+        deviation of heading change in radians when there is no difference
+        between the observed brightnesses in each eye and the set point.
+        
+        left_turn_dist (tuple): A tuple of floats defining the mean and
+        standard deviation of heading change in radians when there is a
+        difference of ``self.max_diff`` between the right eye and the set
+        point, meaning the fish is turning left. In our coordinate system, a
+        change of positive radians is a left (counterclockwise) turn.
+        
+        right_turn_dist (tuple): A tuple of floats defining the mean and
+        standard deviation of heading change in radians when there is a
+        difference of ``self.max_diff`` between the left eye and the set point,
+        meaning the fish is turning right. In our coordinate system, a change
+        of negative radians is a right (clockwise) turn.
     """
     def __init__(self,
                  heading,
                  position,
                  set_point=0.5,
+                 max_diff=0.75,
                  learning_rate=5e-2,
-                 turning_cap=1.0,
-                 turning_scale=2.0,
-                 turning_rate=5e-2,
                  p_move=0.2,
-                 move_distance=5.0):
-        super(BinocularFish, self).__init__(heading,
+                 move_dist=(1.0, 1.0),
+                 no_turn_dist=(0.01, 0.50),
+                 left_turn_dist=(0.52, 0.59),
+                 right_turn_dist=(-0.52, 0.59)):
+        super(BinocularFish, self).__init__(self,
+                                            heading,
                                             position,
                                             set_point=set_point,
+                                            max_diff=max_diff,
                                             learning_rate=learning_rate,
-                                            turning_cap=turning_cap,
-                                            turning_scale=turning_scale,
-                                            turning_rate=turning_rate,
                                             p_move=p_move,
-                                            move_distance=move_distance)
+                                            move_dist=move_dist,
+                                            no_turn_dist=no_turn_dist,
+                                            left_turn_dist=left_turn_dist,
+                                            right_turn_dist=right_turn_dist)
+    
+    def turn(self, environment):
+        """
+        Updates ``self.heading`` by an angle chosen as a weighted mixture of
+        samples from the current Fish's high error turning distribution and no
+        error turning distribution.
+        """
+        # calculate left and right eye differences
+        brightness_left = self.brightness_left(environment)
+        brightness_right = self.brightness_right(environment)
+        diff_left = abs(brightness_left - self.set_point) / self.max_diff
+        diff_right = abs(brightness_right - self.set_point) / self.max_diff
+        # calculate turn angle in radians
+        if diff_left > diff_right:
+            # turning more to the right (clockwise)
+            no_turn_rad = np.random.normal(self.no_turn_dist['mu'],
+                                           self.no_turn_dist['sigma'])
+            turn_rad = np.random.normal(self.right_turn_dist['mu'],
+                                        self.right_turn_dist['sigma'])
+            theta = ((1 - diff_left) * no_turn_rad) + (diff_left * turn_rad)
+        else:
+            # turning more to the left (counterclockwise)
+            no_turn_rad = np.random.normal(self.no_turn_dist['mu'],
+                                           self.no_turn_dist['sigma'])
+            turn_rad = np.random.normal(self.left_turn_dist['mu'],
+                                        self.left_turn_dist['sigma'])
+            theta = ((1 - diff_right) * no_turn_rad) + (diff_left * turn_rad)
+        # update heading by theta radians
+        self.heading += theta
+        self.heading = self.heading % (2 * np.pi)
+        # return calculated update
+        return theta
 
     def step(self, environment):
         """
@@ -349,22 +447,8 @@ class BinocularFish(Fish):
         update = self.set_point - np.mean([brightness_left, brightness_right])
         self.set_point -= self.learning_rate * update
 
-        # update turn probabilities to turn towards area closer to set point
-        # first calculate differences from set point on both sides
-        diff_left = np.abs(brightness_left - self.set_point)
-        diff_right = np.abs(brightness_right - self.set_point)
-        # then calculate difference of differences
-        diff_left_right = diff_left - diff_right
-        # update turn probabilities appropriately
-        self.p_left -= self.learning_rate * diff_left_right
-        # clip updated values to maintain valid probabilities
-        self.p_left = np.clip(self.p_left, 0.0, self.turning_cap)
-        self.p_right = self.turning_cap - self.p_left
-        self.p_noturn = 1.0 - (self.p_left + self.p_right)
-        self.p_noturn = np.clip(self.p_noturn, 0.0, 1.0)
-
         # move fish
-        self.move(environment.shape)
+        (move_distance, theta) = self.move(environment)
 
         # step environment
         environment.step()
@@ -374,9 +458,8 @@ class BinocularFish(Fish):
                 self.position[0],
                 self.position[1],
                 self.set_point,
-                self.p_left,
-                self.p_right,
-                self.p_noturn]
+                move_distance,
+                theta]
 
     def run(self, environment, timesteps):
         """
@@ -396,11 +479,10 @@ class BinocularFish(Fish):
                    self.position[0],
                    self.position[1],
                    self.set_point,
-                   self.p_left,
-                   self.p_right,
-                   self.p_noturn]]
+                   0.0,
+                   0.0]]
         for i in range(timesteps):
             params.append(self.step(environment))
-        params = np.stack(params)
+        params = np.array(params)
         return params
 
