@@ -206,7 +206,7 @@ class Fish:
 	    A tuple of ``np.ndarray``s ``rr`` and ``cc`` containing row
 	    coordinates and column coordinates of a $\frac{\pi}{2}$ degree field
 	    of view observed by the fish in a direction $\frac{\pi}{2}$ from its
-	    heading. These values may be used to index dirrectly into a 2D
+	    heading. These values may be used to index directly into a 2D
 	    array, e.g. ``arr[rr, cc]``.
         """
         radius = max(shape) * 1000
@@ -233,7 +233,7 @@ class Fish:
 	    A tuple of ``np.ndarray``s ``rr`` and ``cc`` containing row
 	    coordinates and column coordinates of a $\frac{\pi}{2}$ degree field
 	    of view observed by the fish in a direction $-\frac{\pi}{2}$ from
-	    its heading. These values may be used to index dirrectly into a 2D
+	    its heading. These values may be used to index directly into a 2D
 	    array, e.g. ``arr[rr, cc]``.
         """
         radius = max(shape) * 1000
@@ -248,7 +248,8 @@ class Fish:
         return polygon(r, c, shape=shape)
 
     def brightness_left(self, environment):
-        # collect brightness information from left eyes
+        """Returns the brightness from the left eye's FOV."""
+        # collect brightness information from left eye
         left_fov = self.left_eye(environment.shape)
         # check for empty fov (due to being at edge of environment)
         if left_fov[0].size > 0 and left_fov[1].size > 0:
@@ -258,7 +259,8 @@ class Fish:
         return brightness_left
     
     def brightness_right(self, environment):
-        # collect brightness information from right eyes
+        """Returns the brightness from the right eye's FOV."""
+        # collect brightness information from right eye
         right_fov = self.right_eye(environment.shape)
         # check for empty fov (due to being at edge of environment)
         if right_fov[0].size > 0 and right_fov[1].size > 0:
