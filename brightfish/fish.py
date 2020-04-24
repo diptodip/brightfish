@@ -28,6 +28,9 @@ class Fish:
 	
 	turning_cap (float, optional): Defines maximum probability for a given
 	direction.
+	
+	turning_scale (float, optional): Defines scaling of ``turning_rate`` due
+	to angular distance from set point.
 
 	turning_rate (float, optional): Defines how fast the fish turns in a
 	given time step.
@@ -54,6 +57,9 @@ class Fish:
 	and turning probabilities.
 	
 	turning_cap (float): Defines maximum probability for a given direction.
+	
+	turning_scale (float): Defines scaling of ``turning_rate`` due to
+	angular distance from set point.
 
 	turning_rate (float): Defines how fast the fish turns in a given time
 	step.
@@ -75,6 +81,7 @@ class Fish:
                  set_point=0.5,
                  learning_rate=5e-2,
                  turning_cap=1.0,
+                 turning_scale=2.0,
                  turning_rate=5e-2,
                  p_move=0.2,
                  move_distance=5.0):
@@ -83,6 +90,7 @@ class Fish:
         self.set_point = set_point
         self.learning_rate = learning_rate
         self.turning_cap = turning_cap
+        self.turning_scale = turning_scale
         self.turning_rate = turning_rate
         self.p_right = 1.0/3.0
         self.p_left = 1.0/3.0
@@ -115,6 +123,9 @@ class Fish:
 	Updates ``self.heading`` by ``self.turning_rate`` radians in a random
 	direction determined by the turning probabilities.
         """
+        #TODO: need to change how turning works to choose angles from a
+        #      distribution based on the error from set point
+        f
         # determine direction of turn from multinomial distribution
         # 0 if turning counterclockwise
         # 1 if turning clockwise
@@ -292,17 +303,19 @@ class BinocularFish(Fish):
                  set_point=0.5,
                  learning_rate=5e-2,
                  turning_cap=1.0,
+                 turning_scale=2.0,
                  turning_rate=5e-2,
                  p_move=0.2,
                  move_distance=5.0):
         super(BinocularFish, self).__init__(heading,
                                             position,
-                                            set_point,
-                                            learning_rate,
-                                            turning_cap,
-                                            turning_rate,
-                                            p_move,
-                                            move_distance)
+                                            set_point=set_point,
+                                            learning_rate=learning_rate,
+                                            turning_cap=turning_cap,
+                                            turning_scale=turning_scale,
+                                            turning_rate=turning_rate,
+                                            p_move=p_move,
+                                            move_distance=move_distance)
 
     def step(self, environment):
         """
@@ -461,12 +474,12 @@ class MonocularFish(Fish):
                  move_distance=5.0):
         super(MonocularFish, self).__init__(heading,
                                             position,
-                                            set_point,
-                                            learning_rate,
-                                            turning_cap,
-                                            turning_rate,
-                                            p_move,
-                                            move_distance)
+                                            set_point=set_point,
+                                            learning_rate=learning_rate,
+                                            turning_cap=turning_cap,
+                                            turning_rate=turning_rate,
+                                            p_move=p_move,
+                                            move_distance=move_distance)
     
     def __str__(self):
         message = ("{0}: heading: {1:.2f} position: {2} "
