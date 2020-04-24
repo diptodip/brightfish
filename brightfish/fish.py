@@ -443,18 +443,13 @@ class BinocularFish(Fish):
 	    A list of the parameters defining the status of the fish.
         """
         # collect brightness information from both eyes
-        left_fov = self.left_eye(environment.shape)
-        right_fov = self.right_eye(environment.shape)
-        # check for empty fovs (due to being at edge of environment)
-        if left_fov[0].size > 0 and left_fov[1].size > 0:
-            brightness_left = environment.stage[left_fov[0], left_fov[1]].mean()
-        else:
-            brightness_left = 0.0
-        if right_fov[0].size > 0 and right_fov[1].size > 0:
-            brightness_right = environment.stage[right_fov[0], right_fov[1]].mean()
-        else:
-            brightness_right = 0.0
+        brightness_left = self.brightness_left(environment)
+        brightness_right = self.brightness_right(environment)
 
+        # calculate differences
+        diff_left = abs(brightness_left - self.set_point)
+        diff_right = abs(brightness_right - self.set_point)
+        
         # update set point to be closer to mean of two eyes
         update = self.set_point - np.mean([brightness_left, brightness_right])
         self.set_point -= self.learning_rate * update
