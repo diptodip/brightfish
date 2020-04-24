@@ -92,8 +92,15 @@ class PartitionedHalves(Environment):
 	shape (tuple of ints): Tuple of integers defining the sahpe of the
 	environment.
 
+        burnin_time (int): Integer that defines how many time steps are taken
+        before changing the brightness of the two halves of the arena.
+
 	switch_time (int): Integer that defines how many time steps are taken
 	before switching the brightness of the two halves.
+
+        initial_value (float, optional): Float that defines the initial value
+        for both halves of the arena for burnin before the two halves take
+        different values.
 
 	initial_half (str, optional): String that is either 'left' or 'right',
 	defining which half of the environment starts out bright. The other half
@@ -106,41 +113,58 @@ class PartitionedHalves(Environment):
 	shape (tuple of ints): Tuple of integers defining the sahpe of the
 	environment.
 
-        time_step (int): The current time step. This is used to keep track of
-        when to switch halves.
+        burnin_time (int): Integer that defines how many time steps are taken
+        before changing the brightness of the two halves of the arena.
 
 	switch_time (int): Integer that defines how many time steps are taken
 	before switching the brightness of the two halves.
 
-	initial_half (str, optional): String that is either 'left' or 'right',
+        initial_value (float): Float that defines the initial value
+        for both halves of the arena for burnin before the two halves take
+        different values.
+
+	initial_half (str): String that is either 'left' or 'right',
 	defining which half of the environment starts out bright. The other half
 	will start dark.
 
 	static (bool, optional): Boolean variable that determines whether the
 	environment switches the brightnesses of its halves or remains static.
     """
-    def __init__(self, shape, switch_time, initial_half='left', static=False):
-        super(FlashingHalves, self).__init__(shape)
+    def __init__(self,
+                 shape,
+                 burnin_time,
+                 switch_time,
+                 initial_value=0.25,
+                 initial_half='left',
+                 static=False):
+        super(PartitionedHalves, self).__init__(shape)
+        self.burnin_time = burnin_time
         self.switch_time = switch_time
+        self.initial_value = initial_value
         self.initial_half = initial_half
         self.static = static
         self.reset()
 
     def step(self):
         self.time_step += 1
+        if (self.time_step == self.burnin_time) and not self.static:
+            self.partition()
         if (self.time_step % self.switch_time == 0) and not self.static:
             self.switch_halves()
 
     def switch_halves(self):
-        self.stage = np.flip(self.stage, axis=2).copy()
+        self.stage = np.flip(self.stage, axis=1).copy()
 
-    def reset():
-        self.time_step = 0
-        self.stage = np.zeros(self.shape)
+    def partition(self):
+        self.stage.fill(0.0)
         if self.initial_half == 'left':
-            self.stage[:, :self.midpoint[1]] = 1.0
+            self.stage[:, :self.midpoint[1]+1] = 1.0
         else:
             self.stage[:, self.midpoint[1]:] = 1.0
+
+    def reset(self):
+        self.time_step = 0
+        self.stage = np.full(self.shape, self.initial_value)
 
 class SinusoidalGradient(Environment):
     """
