@@ -461,12 +461,14 @@ class BinocularFish(Fish):
         environment.step()
 
         # return updated parameters
-        return [self.heading,
-                self.position[0],
-                self.position[1],
-                self.set_point,
-                move_distance,
-                theta]
+        return {'heading': self.heading,
+                'r': self.position[0],
+                'c': self.position[1],
+                'set_point': self.set_point,
+                'diff_left': diff_left,
+                'diff_right': diff_right,
+                'move_distance': move_distance,
+                'theta': theta}
 
     def run(self, environment, timesteps):
         """
@@ -482,14 +484,20 @@ class BinocularFish(Fish):
 	    An ``np.ndarray`` of the parameters defining the status of the fish
 	    at each time point.
         """
-        params = [[self.heading,
-                   self.position[0],
-                   self.position[1],
-                   self.set_point,
-                   0.0,
-                   0.0]]
+        params = {'heading': [self.heading],
+                  'r': [self.position[0]],
+                  'c': [self.position[1]],
+                  'set_point': [self.set_point],
+                  'diff_left': [0],
+                  'diff_right': [0],
+                  'move_distance': [0],
+                  'theta': [0]}
         for i in range(timesteps):
-            params.append(self.step(environment))
-        params = np.array(params)
+            step_params = self.step(environment)
+            for key in step_params.keys():
+                if key in params:
+                    params[key].append(step_params[key])
+                else:
+                    params[key] = [step_params[key]]
         return params
 
