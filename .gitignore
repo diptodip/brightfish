@@ -105,3 +105,4 @@ venv.bak/
 
 # Temporary
 .DS_Store
+.vscode
