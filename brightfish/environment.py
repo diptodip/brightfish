@@ -25,10 +25,70 @@ class Environment:
     def step(self):
         """Defines the behavior of the environment in one time step."""
         raise NotImplementedError
-
+    
+    @property
     def midpoint(self):
         """Gives the middle coordinate/value of ``self.shape``."""
         return tuple(s//2 for s in self.shape)
+
+class FlashingHalves(Environment):
+    """
+    Simple 2D environment where one half is bright and the other dark. The two
+    sides can switch their brightness values every few time steps.
+
+    Args:
+	shape (tuple of ints): Tuple of integers defining the sahpe of the
+	environment.
+
+	switch_time (int): Integer that defines how many time steps are taken
+	before switching the brightness of the two halves.
+
+	initial_half (str, optional): String that is either 'left' or 'right',
+	defining which half of the environment starts out bright. The other half
+	will start dark.
+
+	static (bool, optional): Boolean variable that determines whether the
+	environment switches the brightnesses of its halves or remains static.
+
+    Attributes:
+	shape (tuple of ints): Tuple of integers defining the sahpe of the
+	environment.
+
+        time_step (int): The current time step. This is used to keep track of
+        when to switch halves.
+
+	switch_time (int): Integer that defines how many time steps are taken
+	before switching the brightness of the two halves.
+
+	initial_half (str, optional): String that is either 'left' or 'right',
+	defining which half of the environment starts out bright. The other half
+	will start dark.
+
+	static (bool, optional): Boolean variable that determines whether the
+	environment switches the brightnesses of its halves or remains static.
+    """
+    def __init__(self, shape, switch_time, initial_half='left', static=False):
+        super(FlashingHalves, self).__init__(shape)
+        self.switch_time = switch_time
+        self.initial_half = initial_half
+        self.static = static
+        self.reset()
+
+    def step(self):
+        self.time_step += 1
+        if (self.time_step % self.switch_time == 0) and not self.static:
+            self.switch_halves()
+
+    def switch_halves(self):
+        self.stage = np.flip(self.stage, axis=2).copy()
+
+    def reset():
+        self.time_step = 0
+        self.stage = np.zeros(self.shape)
+        if self.initial_half == 'left':
+            self.stage[:, :self.midpoint[1]] = 1.0
+        else:
+            self.stage[:, self.midpoint[1]:] = 1.0
 
 class SinusoidalGradient(Environment):
     """
@@ -65,10 +125,7 @@ class SinusoidalGradient(Environment):
 	static (bool, optional): Boolean variable that determines whether peak
 	is stationary at each time step or moves autonomously at each time step.
     """
-    def __init__(self,
-                 shape,
-                 dt = 1e-2,
-                 static=True):
+    def __init__(self, shape, dt = 1e-2, static=True):
         super(SinusoidalGradient, self).__init__(shape)
         self.start = 0.0
         self.stop = 2 * np.pi
