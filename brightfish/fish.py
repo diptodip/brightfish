@@ -102,17 +102,20 @@ class Fish:
     def __init__(self,
                  heading,
                  position,
+                 static=False,
                  set_point=0.5,
                  max_diff=0.75,
                  learning_rate=5e-2,
                  p_move=0.2,
-                 move_dist=(1.0, 1.0),
-                 no_turn_dist=(0.01, 0.50),
-                 left_turn_dist=(0.52, 0.59),
-                 right_turn_dist=(-0.52, 0.59)):
+                 move_dist={'mu': 1.0, 'sigma': 1.0},
+                 no_turn_dist={'mu': 0.01, 'sigma': 0.50},
+                 left_turn_dist={'mu': 0.52, 'sigma': 0.59},
+                 right_turn_dist={'mu': -0.52, 'sigma': 0.59}):
         self.heading = heading
         self.position = position
+        self.static = static
         self.set_point = set_point
+        self.max_diff = max_diff
         self.learning_rate = learning_rate
         self.p_move = p_move
         self.move_dist = move_dist
@@ -166,7 +169,12 @@ class Fish:
                                              self.move_dist['sigma'])
             shape = environment.shape
             r, c = pol2cart(move_distance, self.heading, origin=self.position)
-            if r >= 0 and r < shape[0] and c >= 0 and c < shape[1]:
+            update = ((not self.static)
+                      and (r >= 0)
+                      and (r < shape[0])
+                      and (c >= 0)
+                      and (c < shape[1]))
+            if update:
                 self.position = [r, c]
         return (move_distance, theta)
 
@@ -365,17 +373,18 @@ class BinocularFish(Fish):
     def __init__(self,
                  heading,
                  position,
+                 static=False,
                  set_point=0.5,
                  max_diff=0.75,
                  learning_rate=5e-2,
                  p_move=0.2,
-                 move_dist=(1.0, 1.0),
-                 no_turn_dist=(0.01, 0.50),
-                 left_turn_dist=(0.52, 0.59),
-                 right_turn_dist=(-0.52, 0.59)):
-        super(BinocularFish, self).__init__(self,
-                                            heading,
+                 move_dist={'mu': 1.0, 'sigma': 1.0},
+                 no_turn_dist={'mu': 0.01, 'sigma': 0.50},
+                 left_turn_dist={'mu': 0.52, 'sigma': 0.59},
+                 right_turn_dist={'mu': -0.52, 'sigma': 0.59}):
+        super(BinocularFish, self).__init__(heading,
                                             position,
+                                            static=static,
                                             set_point=set_point,
                                             max_diff=max_diff,
                                             learning_rate=learning_rate,
@@ -412,8 +421,9 @@ class BinocularFish(Fish):
                                         self.left_turn_dist['sigma'])
             theta = ((1 - diff_right) * no_turn_rad) + (diff_left * turn_rad)
         # update heading by theta radians
-        self.heading += theta
-        self.heading = self.heading % (2 * np.pi)
+        if not self.static:
+            self.heading += theta
+            self.heading = self.heading % (2 * np.pi)
         # return calculated update
         return theta
 
