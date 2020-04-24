@@ -106,3 +106,8 @@ venv.bak/
 # Temporary
 .DS_Store
 .vscode
+
+# Data files
+*.pptx
+*.ppt
+*.dat
