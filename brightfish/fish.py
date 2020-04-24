@@ -219,10 +219,10 @@ class Fish:
         """
         radius = max(shape) * 1000
         r1, c1 = pol2cart(radius,
-                          (self.heading + np.pi/4) % (2 * np.pi),
+                          (self.heading + 0.1 * np.pi) % (2 * np.pi),
                           origin=self.position)
         r2, c2 = pol2cart(radius,
-                          (self.heading + (3 * np.pi/4)) % (2 * np.pi),
+                          (self.heading + 0.9 * np.pi) % (2 * np.pi),
                           origin=self.position)
         r = [self.position[0], r1, r2]
         c = [self.position[1], c1, c2]
@@ -246,10 +246,10 @@ class Fish:
         """
         radius = max(shape) * 1000
         r1, c1 = pol2cart(radius,
-                          (self.heading - np.pi/4) % (2 * np.pi),
+                          (self.heading - 0.1 * np.pi) % (2 * np.pi),
                           origin=self.position)
         r2, c2 = pol2cart(radius,
-                          (self.heading - (3 * np.pi/4)) % (2 * np.pi),
+                          (self.heading - 0.9 * np.pi) % (2 * np.pi),
                           origin=self.position)
         r = [self.position[0], r1, r2]
         c = [self.position[1], c1, c2]
