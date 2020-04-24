@@ -1,4 +1,6 @@
 import numpy as np
+from skimage.draw import circle
+from skimage.filters import gaussian
 
 class Environment:
     """
@@ -31,10 +33,60 @@ class Environment:
         """Gives the middle coordinate/value of ``self.shape``."""
         return tuple(s//2 for s in self.shape)
 
-class FlashingHalves(Environment):
+class Spotlight(Environment):
     """
-    Simple 2D environment where one half is bright and the other dark. The two
-    sides can switch their brightness values every few time steps.
+    An Environment that simulates the experiment from Burgess 2010. The
+    experiment consists of a 2D arena in which a Fish is adapted to a uniform
+    brightness for some time. After this time period, a target Gaussian spot of
+    a specified brightness is shown at the desired location (this should fall
+    in the field of view of the Fish).
+    """
+    def __init__(self,
+                 shape,
+                 burnin_time,
+                 spot_coordinate,
+                 initial_value=0.25,
+                 spot_value=0.25,
+                 spot_radius=1):
+        super(Spotlight, self).__init__(shape)
+        assert self.shape[0] == self.shape[1], "Arena must be square"
+        self.burnin_time = burnin_time
+        self.spot_coordinate = spot_coordinate
+        self.initial_value = initial_value
+        self.spot_value = spot_value
+        self.spot_radius = spot_radius
+        # TODO: need to fix fish FOV to allow making use of aperture
+        aperture_rows, aperture_cols = circle(int(self.shape[0] / 2),
+                                              int(self.shape[1] / 2),
+                                              int(self.shape[0] / 2),
+                                              shape=self.shape)
+        self.aperture = np.zeros(self.shape)
+        self.aperture[aperture_rows, aperture_cols] = 1.0
+        self.reset()
+
+    def step(self):
+        self.time_step += 1
+        if self.time_step == self.burnin_time:
+            self.place_spot()
+
+    def place_spot(self):
+        self.stage.fill(0.0)
+        spot_rows, spot_cols = circle(*self.spot_coordinate,
+                                      self.spot_radius,
+                                      shape=self.shape)
+        self.stage[spot_rows, spot_cols] = self.spot_value
+        self.stage = gaussian(self.stage)
+
+    def reset(self):
+        self.time_step = 0
+        self.stage = np.full(self.shape, self.initial_value)
+
+class PartitionedHalves(Environment):
+    """
+    Simple 2D Environment where two halves of an arena can have different
+    brightness values. The two sides can switch their brightness values every
+    few time steps. The arena can also start at some uniform value for both
+    halves as a burn in period.
 
     Args:
 	shape (tuple of ints): Tuple of integers defining the sahpe of the
