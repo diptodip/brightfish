@@ -419,7 +419,7 @@ class BinocularFish(Fish):
                                            self.no_turn_dist['sigma'])
             turn_rad = np.random.normal(self.left_turn_dist['mu'],
                                         self.left_turn_dist['sigma'])
-            theta = ((1 - diff_right) * no_turn_rad) + (diff_left * turn_rad)
+            theta = ((1 - diff_right) * no_turn_rad) + (diff_right * turn_rad)
         # update heading by theta radians
         if not self.static:
             self.heading += theta
