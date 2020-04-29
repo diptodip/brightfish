@@ -172,7 +172,7 @@ class PartitionedHalves(Environment):
         self.time_step = 0
         if hasattr(self.initial_value, '__iter__'):
             self.stage = np.full(self.shape, self.initial_value[0])
-            self.stage[self.midpoint[1]:] = self.initial_value[1]
+            self.stage[:, self.midpoint[1]:] = self.initial_value[1]
         else:
             self.stage = np.full(self.shape, self.initial_value)
 
