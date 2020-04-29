@@ -676,6 +676,7 @@ class MonocularFish(Fish):
         # update set point to be closer to mean of two eyes
         update_left = self.set_point[0] - brightness_left
         update_right = self.set_point[1] - brightness_right
+        learning_rate = self.learning_rate
         self.set_point = (self.set_point[0] - learning_rate * update_left,
                           self.set_point[1] - learning_rate * update_right)
 
