@@ -431,9 +431,7 @@ class BinocularFish(Fish):
         """
 	Defines the behavior of the fish in one time step in the given
 	environment. This fish takes the average of brightness information from
-	both eyes and updates its set point to be closer to this average. This
-	fish also updates its turning probabilities to increase probability to
-	turn towards the eye with brightness closer to the updated set point.
+	both eyes and updates its set point to be closer to this average.
 
 	Args:
 	    environment (``Environment``): Defines the environment in which the
