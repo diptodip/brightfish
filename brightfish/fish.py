@@ -670,8 +670,8 @@ class MonocularFish(Fish):
         brightness_right = self.brightness_right(environment)
 
         # calculate differences
-        diff_left = abs(brightness_left - self.set_point)
-        diff_right = abs(brightness_right - self.set_point)
+        diff_left = abs(brightness_left - self.set_point[0])
+        diff_right = abs(brightness_right - self.set_point[1])
         
         # update set point to be closer to mean of two eyes
         update_left = self.set_point[0] - brightness_left
