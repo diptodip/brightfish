@@ -479,8 +479,8 @@ class BinocularFish(Fish):
 	    timesteps (int): Defines the number of time steps to perform.
 
 	Returns:
-	    An ``np.ndarray`` of the parameters defining the status of the fish
-	    at each time point.
+            A dict mapping parameter names to lists containing the value of
+            that parameter for each timestep.
         """
         params = {'heading': [self.heading],
                   'r': [self.position[0]],
@@ -707,8 +707,8 @@ class MonocularFish(Fish):
 	    timesteps (int): Defines the number of time steps to perform.
 
 	Returns:
-	    An ``np.ndarray`` of the parameters defining the status of the fish
-	    at each time point.
+            A dict mapping parameter names to lists containing the value of
+            that parameter for each timestep.
         """
         params = {'heading': [self.heading],
                   'r': [self.position[0]],
