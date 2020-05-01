@@ -403,23 +403,23 @@ class BinocularFish(Fish):
         # calculate left and right eye differences
         brightness_left = self.brightness_left(environment)
         brightness_right = self.brightness_right(environment)
-        diff_left = abs(brightness_left - self.set_point) / self.max_diff
-        diff_right = abs(brightness_right - self.set_point) / self.max_diff
-        # calculate turn angle in radians
-        if diff_left > diff_right:
-            # turning more to the right (clockwise)
-            no_turn_rad = np.random.normal(self.no_turn_dist['mu'],
-                                           self.no_turn_dist['sigma'])
-            turn_rad = np.random.normal(self.right_turn_dist['mu'],
-                                        self.right_turn_dist['sigma'])
-            theta = ((1 - diff_left) * no_turn_rad) + (diff_left * turn_rad)
+        diff_left = abs(brightness_left - self.set_point)
+        diff_right = abs(brightness_right - self.set_point)
+        diff_diff = (diff_left - diff_right)
+        # use sign of diff_left - diff_right to choose turn distribution
+        if diff_diff > 0:
+            # left is worse, turn right
+            turn_dist = self.right_turn_dist
         else:
-            # turning more to the left (counterclockwise)
-            no_turn_rad = np.random.normal(self.no_turn_dist['mu'],
-                                           self.no_turn_dist['sigma'])
-            turn_rad = np.random.normal(self.left_turn_dist['mu'],
-                                        self.left_turn_dist['sigma'])
-            theta = ((1 - diff_right) * no_turn_rad) + (diff_right * turn_rad)
+            # right is worse, turn left
+            turn_dist = self.left_turn_dist
+        diff_diff = self.max_diff * nonlinearity(diff_diff)
+        # calculate turn angle in radians
+        no_turn_rad = np.random.normal(self.no_turn_dist['mu'],
+                                       self.no_turn_dist['sigma'])
+        turn_rad = np.random.normal(turn_dist['mu'],
+                                    turn_dist['sigma'])
+        theta = ((1 - diff_diff) * no_turn_rad) + (diff_diff * turn_rad)
         # update heading by theta radians
         if not self.static:
             self.heading += theta
@@ -627,23 +627,23 @@ class MonocularFish(Fish):
         brightness_left = self.brightness_left(environment)
         brightness_right = self.brightness_right(environment)
         # left and right eye use different set points
-        diff_left = abs(brightness_left - self.set_point[0]) / self.max_diff
-        diff_right = abs(brightness_right - self.set_point[1]) / self.max_diff
-        # calculate turn angle in radians
-        if diff_left > diff_right:
-            # turning more to the right (clockwise)
-            no_turn_rad = np.random.normal(self.no_turn_dist['mu'],
-                                           self.no_turn_dist['sigma'])
-            turn_rad = np.random.normal(self.right_turn_dist['mu'],
-                                        self.right_turn_dist['sigma'])
-            theta = ((1 - diff_left) * no_turn_rad) + (diff_left * turn_rad)
+        diff_left = abs(brightness_left - self.set_point[0])
+        diff_right = abs(brightness_right - self.set_point[1])
+        diff_diff = (diff_left - diff_right)
+        # use sign of diff_left - diff_right to choose turn distribution
+        if diff_diff > 0:
+            # left is worse, turn right
+            turn_dist = self.right_turn_dist
         else:
-            # turning more to the left (counterclockwise)
-            no_turn_rad = np.random.normal(self.no_turn_dist['mu'],
-                                           self.no_turn_dist['sigma'])
-            turn_rad = np.random.normal(self.left_turn_dist['mu'],
-                                        self.left_turn_dist['sigma'])
-            theta = ((1 - diff_right) * no_turn_rad) + (diff_left * turn_rad)
+            # right is worse, turn left
+            turn_dist = self.left_turn_dist
+        diff_diff = self.max_diff * nonlinearity(diff_diff)
+        # calculate turn angle in radians
+        no_turn_rad = np.random.normal(self.no_turn_dist['mu'],
+                                       self.no_turn_dist['sigma'])
+        turn_rad = np.random.normal(turn_dist['mu'],
+                                    turn_dist['sigma'])
+        theta = ((1 - diff_diff) * no_turn_rad) + (diff_diff * turn_rad)
         # update heading by theta radians
         if not self.static:
             self.heading += theta
