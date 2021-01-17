@@ -2,6 +2,7 @@ import numpy as np
 from skimage.draw import circle
 from skimage.filters import gaussian
 
+
 class Environment:
     """
     Base class for defining environments. A base environment takes at least a
@@ -9,17 +10,18 @@ class Environment:
     environment, visibility from a left eye, and visibility from a right eye.
 
     Args:
-	shape (tuple of ints): Tuple of integers defining the shape of the
-	environment.
+        shape (tuple of ints): Tuple of integers defining the shape of the
+        environment.
 
     Attributes:
-	shape (tuple of ints): Tuple of integers defining the shape of the
-	environment.
+        shape (tuple of ints): Tuple of integers defining the shape of the
+        environment.
 
         stage (``None`` or ``np.ndarray``): Contains actual data about the
         environment, initialized to ``None``. The ``__init__()`` method of
         subclasses of ``Environment`` should define the stage as an ndarray.
     """
+
     def __init__(self, shape):
         self.shape = shape
         self.stage = None
@@ -27,11 +29,12 @@ class Environment:
     def step(self):
         """Defines the behavior of the environment in one time step."""
         raise NotImplementedError
-    
+
     @property
     def midpoint(self):
         """Gives the middle coordinate/value of ``self.shape``."""
-        return tuple(s//2 for s in self.shape)
+        return tuple(s // 2 for s in self.shape)
+
 
 class Spotlight(Environment):
     """
@@ -41,13 +44,16 @@ class Spotlight(Environment):
     a specified brightness is shown at the desired location (this should fall
     in the field of view of the Fish).
     """
-    def __init__(self,
-                 shape,
-                 burnin_time,
-                 spot_coordinate,
-                 initial_value=0.25,
-                 spot_value=0.25,
-                 spot_radius=1):
+
+    def __init__(
+        self,
+        shape,
+        burnin_time,
+        spot_coordinate,
+        initial_value=0.25,
+        spot_value=0.25,
+        spot_radius=1,
+    ):
         super(Spotlight, self).__init__(shape)
         assert self.shape[0] == self.shape[1], "Arena must be square"
         self.burnin_time = burnin_time
@@ -56,10 +62,12 @@ class Spotlight(Environment):
         self.spot_value = spot_value
         self.spot_radius = spot_radius
         # TODO: need to fix fish FOV to allow making use of aperture
-        aperture_rows, aperture_cols = circle(int(self.shape[0] / 2),
-                                              int(self.shape[1] / 2),
-                                              int(self.shape[0] / 2),
-                                              shape=self.shape)
+        aperture_rows, aperture_cols = circle(
+            int(self.shape[0] / 2),
+            int(self.shape[1] / 2),
+            int(self.shape[0] / 2),
+            shape=self.shape,
+        )
         self.aperture = np.zeros(self.shape)
         self.aperture[aperture_rows, aperture_cols] = 1.0
         self.reset()
@@ -71,15 +79,16 @@ class Spotlight(Environment):
 
     def place_spot(self):
         self.stage.fill(0.0)
-        spot_rows, spot_cols = circle(*self.spot_coordinate,
-                                      self.spot_radius,
-                                      shape=self.shape)
+        spot_rows, spot_cols = circle(
+            *self.spot_coordinate, self.spot_radius, shape=self.shape
+        )
         self.stage[spot_rows, spot_cols] = self.spot_value
         self.stage = gaussian(self.stage)
 
     def reset(self):
         self.time_step = 0
         self.stage = np.full(self.shape, self.initial_value)
+
 
 class PartitionedHalves(Environment):
     """
@@ -89,14 +98,14 @@ class PartitionedHalves(Environment):
     halves as a burn in period.
 
     Args:
-	shape (tuple of ints): Tuple of integers defining the sahpe of the
-	environment.
+        shape (tuple of ints): Tuple of integers defining the sahpe of the
+        environment.
 
         burnin_time (int): Integer that defines how many time steps are taken
         before changing the brightness of the two halves of the arena.
 
-	switch_time (int): Integer that defines how many time steps are taken
-	before switching the brightness of the two halves.
+        switch_time (int): Integer that defines how many time steps are taken
+        before switching the brightness of the two halves.
 
         initial_value (float or tuple, optional): Float or tuple that defines
         the initial value(s) for both halves (or the left and right half
@@ -107,18 +116,18 @@ class PartitionedHalves(Environment):
         the target value(s) for both halves (or the left and right half
         respectively if tuple) of the arena after burnin.
 
-	static (bool, optional): Boolean variable that determines whether the
-	environment switches the brightnesses of its halves or remains static.
+        static (bool, optional): Boolean variable that determines whether the
+        environment switches the brightnesses of its halves or remains static.
 
     Attributes:
-	shape (tuple of ints): Tuple of integers defining the sahpe of the
-	environment.
+        shape (tuple of ints): Tuple of integers defining the sahpe of the
+        environment.
 
         burnin_time (int): Integer that defines how many time steps are taken
         before changing the brightness of the two halves of the arena.
 
-	switch_time (int): Integer that defines how many time steps are taken
-	before switching the brightness of the two halves.
+        switch_time (int): Integer that defines how many time steps are taken
+        before switching the brightness of the two halves.
 
         initial_value (float): Float that defines the initial value
         for both halves of the arena for burnin before the two halves take
@@ -128,29 +137,32 @@ class PartitionedHalves(Environment):
         value(s) for both halves (or the left and right half respectively if
         tuple) of the arena after burnin.
 
-	static (bool, optional): Boolean variable that determines whether the
-	environment switches the brightnesses of its halves or remains static.
+        static (bool, optional): Boolean variable that determines whether the
+        environment switches the brightnesses of its halves or remains static.
     """
-    def __init__(self,
-                 shape,
-                 burnin_time,
-                 switch_time,
-                 initial_value=0.25,
-                 target_value=(1.0, 0.0),
-                 static=False):
+
+    def __init__(
+        self,
+        shape,
+        burnin_time,
+        switch_time,
+        initial_value=0.25,
+        target_value=(1.0, 0.0),
+        static=False,
+    ):
         super(PartitionedHalves, self).__init__(shape)
         self.burnin_time = burnin_time
         self.switch_time = switch_time
         self.initial_value = initial_value
-        if hasattr(self.initial_value, '__iter__'):
-            assert len(self.initial_value) == 2, (
-                "Must have two values for left and right"
-            )
+        if hasattr(self.initial_value, "__iter__"):
+            assert (
+                len(self.initial_value) == 2
+            ), "Must have two values for left and right"
         self.target_value = target_value
-        if hasattr(self.target_value, '__iter__'):
-            assert len(self.target_value) == 2, (
-                "Must have two values for left and right"
-            )
+        if hasattr(self.target_value, "__iter__"):
+            assert (
+                len(self.target_value) == 2
+            ), "Must have two values for left and right"
         self.static = static
         self.reset()
 
@@ -165,16 +177,17 @@ class PartitionedHalves(Environment):
         self.stage = np.flip(self.stage, axis=1).copy()
 
     def partition(self):
-        self.stage[:, :self.midpoint[1] + 1] = self.target_value[0]
-        self.stage[:, self.midpoint[1]:] = self.target_value[1]
+        self.stage[:, : self.midpoint[1] + 1] = self.target_value[0]
+        self.stage[:, self.midpoint[1] :] = self.target_value[1]
 
     def reset(self):
         self.time_step = 0
-        if hasattr(self.initial_value, '__iter__'):
+        if hasattr(self.initial_value, "__iter__"):
             self.stage = np.full(self.shape, self.initial_value[0])
-            self.stage[:, self.midpoint[1]:] = self.initial_value[1]
+            self.stage[:, self.midpoint[1] :] = self.initial_value[1]
         else:
             self.stage = np.full(self.shape, self.initial_value)
+
 
 class SinusoidalGradient(Environment):
     """
@@ -182,45 +195,46 @@ class SinusoidalGradient(Environment):
     sine wave peaks in the middle and is squished to the range [0, 1].
 
     Args:
-	shape (tuple of ints): Tuple of integers defining the shape of the
-	environment; the sine gradient will be changing across each row.
+        shape (tuple of ints): Tuple of integers defining the shape of the
+        environment; the sine gradient will be changing across each row.
 
-	dt (float, optional): Float that designates how much the peak moves
-	counterclockwise in one time step if ``self.static`` is ``False``.
+        dt (float, optional): Float that designates how much the peak moves
+        counterclockwise in one time step if ``self.static`` is ``False``.
 
-	static (bool, optional): Boolean variable that determines whether peak
-	is stationary at each time step or moves autonomously at each time step.
+        static (bool, optional): Boolean variable that determines whether peak
+        is stationary at each time step or moves autonomously at each time step.
 
     Attributes:
-	shape (tuple of ints): Tuple of integers defining the shape of the
-	environment; the sine gradient will be changing across each row.
+        shape (tuple of ints): Tuple of integers defining the shape of the
+        environment; the sine gradient will be changing across each row.
 
-	start (float): Contains the start heading for a circle, $0$.
+        start (float): Contains the start heading for a circle, $0$.
 
-	stop (float): Contains the end heading for a circle, $2\pi$.
+        stop (float): Contains the end heading for a circle, $2\pi$.
 
-	phase (float): Defines the phase of the sine function in radians.
-	Initialized to $\frac{3\pi}{2}$.
+        phase (float): Defines the phase of the sine function in radians.
+        Initialized to $\frac{3\pi}{2}$.
 
-	dt (float, optional): Float that designates how much the peak moves
-	counterclockwise in one time step if ``self.static`` is ``False``.
+        dt (float, optional): Float that designates how much the peak moves
+        counterclockwise in one time step if ``self.static`` is ``False``.
 
-	stage (``np.ndarray``): 2D ``np.ndarray`` where each row contains
-	``self.shape[1]`` values of sine from $0$ to $2\pi$.
+        stage (``np.ndarray``): 2D ``np.ndarray`` where each row contains
+        ``self.shape[1]`` values of sine from $0$ to $2\pi$.
 
-	static (bool, optional): Boolean variable that determines whether peak
-	is stationary at each time step or moves autonomously at each time step.
+        static (bool, optional): Boolean variable that determines whether peak
+        is stationary at each time step or moves autonomously at each time step.
     """
-    def __init__(self, shape, dt = 1e-2, static=True):
+
+    def __init__(self, shape, dt=1e-2, static=True):
         super(SinusoidalGradient, self).__init__(shape)
         self.start = 0.0
         self.stop = 2 * np.pi
         self.phase = 3 * np.pi / 2
         self.dt = dt
-        self.stage = 0.5 * (1 + np.sin(np.linspace(self.start,
-                                            self.stop,
-                                            num=self.shape[1])
-                                       + self.phase))
+        self.stage = 0.5 * (
+            1
+            + np.sin(np.linspace(self.start, self.stop, num=self.shape[1]) + self.phase)
+        )
         self.stage = np.repeat(self.stage[None, :], self.shape[0], axis=0)
         self.static = static
 
@@ -231,9 +245,11 @@ class SinusoidalGradient(Environment):
         """
         if not self.static:
             self.phase = (self.phase + self.dt) % (2 * np.pi)
-            line = 0.5 * (1 + np.sin(np.linspace(self.start,
-                                          self.stop,
-                                          num=self.shape[1])
-                                     + self.phase))
+            line = 0.5 * (
+                1
+                + np.sin(
+                    np.linspace(self.start, self.stop, num=self.shape[1]) + self.phase
+                )
+            )
             line = np.repeat(line[None, :], self.shape[0], axis=0)
             self.stage = line
